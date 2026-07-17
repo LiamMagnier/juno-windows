@@ -560,13 +560,15 @@
   left: 0;
   z-index: 300;
   padding: 6px;
-  background: hsl(var(--popover) / 0.92);
-  backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-float);
   box-shadow: var(--shadow-float);
-  animation: code-pop-in var(--dur-fast) var(--ease-out-expo);
+  transform-origin: bottom left;
+  animation: code-pop-in var(--dur-base) var(--ease-spring);
 }
 
 .code-popover[data-side="up"] {

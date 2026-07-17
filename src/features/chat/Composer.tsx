@@ -180,9 +180,10 @@ export function Composer({
   // ---- canvas + deep research ----
   const canvasOn = prefs.canvas;
   const deepResearch = !privateMode && (prefs.deepResearchByThread[threadKey] ?? false);
-  // Count everything the "+" menu currently has enabled, for its badge.
+  // Badge counts genuinely-added items (canvas is on by default, so its state
+  // isn't an "addition"); it tells the user something is attached behind the +.
   const addActiveCount =
-    (deepResearch ? 1 : 0) + (canvasOn ? 0 : 1) + selectedConnectors.length + (pendingProject ? 1 : 0);
+    (deepResearch ? 1 : 0) + selectedConnectors.length + (pendingProject ? 1 : 0);
 
   const chooseProject = (id: string | null) => {
     setPendingProjectId(id);
@@ -570,7 +571,7 @@ export function Composer({
               <button
                 type="button"
                 className="chat-control-toggle chat-add-btn"
-                aria-haspopup="menu"
+                aria-haspopup="dialog"
                 aria-expanded={addOpen}
                 aria-label="Add attachments, canvas, research, projects and connectors"
                 title="Add"
@@ -588,10 +589,9 @@ export function Composer({
                 ) : null}
               </button>
               <ChatPopover open={addOpen} onClose={() => setAddOpen(false)} label="Add" width={300}>
-                <div className="chat-addmenu" role="menu" aria-label="Add">
+                <div className="chat-addmenu">
                   <button
                     type="button"
-                    role="menuitem"
                     className="chat-menu-item chat-menu-row"
                     disabled={staged.length >= MAX_ATTACHMENTS}
                     onClick={() => {
@@ -604,7 +604,6 @@ export function Composer({
                   </button>
                   <button
                     type="button"
-                    role="menuitem"
                     className="chat-menu-item chat-menu-row"
                     disabled={staged.length >= MAX_ATTACHMENTS}
                     onClick={() => {
@@ -617,7 +616,6 @@ export function Composer({
                   </button>
                   <button
                     type="button"
-                    role="menuitem"
                     className="chat-menu-item chat-menu-row"
                     disabled={staged.length >= MAX_ATTACHMENTS}
                     onClick={() => {
@@ -633,8 +631,7 @@ export function Composer({
 
                   <button
                     type="button"
-                    role="menuitemcheckbox"
-                    aria-checked={canvasOn}
+                    aria-pressed={canvasOn}
                     className="chat-menu-item chat-menu-row"
                     data-selected={canvasOn || undefined}
                     onClick={() => prefs.setCanvas(!canvasOn)}
@@ -645,8 +642,7 @@ export function Composer({
                   </button>
                   <button
                     type="button"
-                    role="menuitemcheckbox"
-                    aria-checked={deepResearch}
+                    aria-pressed={deepResearch}
                     className="chat-menu-item chat-menu-row"
                     data-selected={deepResearch || undefined}
                     onClick={() => prefs.setDeepResearch(threadKey, !deepResearch)}
@@ -659,16 +655,17 @@ export function Composer({
                   {isNewChat && projectList.length > 0 ? (
                     <>
                       <div className="chat-menu-sep" role="separator" />
-                      <div className="chat-popover-title">Add to project</div>
-                      <div className="chat-addmenu-scroll">
+                      <div className="chat-popover-title" id="add-project-label">
+                        Add to project
+                      </div>
+                      <div className="chat-addmenu-scroll" role="group" aria-labelledby="add-project-label">
                         {projectList.map((p) => {
                           const active = pendingProject === p.id;
                           return (
                             <button
                               key={p.id}
                               type="button"
-                              role="menuitemcheckbox"
-                              aria-checked={active}
+                              aria-pressed={active}
                               className="chat-menu-item chat-menu-row"
                               data-selected={active || undefined}
                               onClick={() => chooseProject(active ? null : p.id)}
