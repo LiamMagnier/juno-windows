@@ -174,6 +174,10 @@ export async function apiStream(
 
   const cancel = () => {
     void invoke("api_stream_cancel", { streamId: handle.streamId }).catch(() => {});
+    // Rust cancellation stops the connection without a terminal event —
+    // wake the consumer loop so the generator can exit instead of hanging.
+    queue.push({ event: "end" });
+    notify?.();
   };
   if (signal.aborted) {
     cancel();
