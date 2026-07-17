@@ -1,6 +1,6 @@
 [package]
 name = "juno-windows"
-version = "0.1.1"
+version = "0.1.2"
 description = "Juno for Windows — native desktop client of the Juno backend"
 authors = ["Juno"]
 edition = "2021"
