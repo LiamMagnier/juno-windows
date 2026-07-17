@@ -640,6 +640,7 @@
 
 .chat-composer:focus-within {
   border-color: hsl(var(--primary) / 0.6);
+  box-shadow: var(--shadow-soft), 0 0 0 3px hsl(var(--ring) / 0.12);
 }
 
 .chat-composer[data-private] {
@@ -1669,4 +1670,59 @@
   justify-content: flex-end;
   gap: 8px;
   padding-top: 4px;
+}
+
+/* ============================================================
+   Motion & interaction polish (Fluent: fast, functional, subtle).
+   Everything here is transform/opacity so it composites cheaply, and
+   the global reduced-motion rule in base.css neutralizes it.
+   ============================================================ */
+
+/* The "+" glyph pivots toward a close affordance while the menu is open. */
+.chat-add-btn svg {
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.chat-add-btn[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+}
+
+/* Tactile press on the composer controls. */
+.chat-control-pill:active:not(:disabled),
+.chat-control-toggle:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.chat-control-pill,
+.chat-control-toggle {
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-spring);
+}
+
+/* Send button: gentle grow on hover, decisive press. */
+.chat-send-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+.chat-send-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+/* Menu rows slide their highlight in rather than hard-cutting it. */
+.chat-menu-item,
+.chat-connector-row {
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
+}
+
+/* Follow-up pills rise in when a turn finishes. */
+.chat-followup-pill {
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-spring);
+  animation: chat-rise-in var(--dur-base) var(--ease-out-soft) both;
+}
+.chat-followup-pill:active {
+  transform: scale(0.97);
 }

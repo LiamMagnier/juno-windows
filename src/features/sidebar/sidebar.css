@@ -709,3 +709,75 @@
     border: 1px solid CanvasText;
   }
 }
+
+/* ---- Motion & interaction polish ---- */
+
+/* Selected row gets a Fluent accent bar that grows in from the leading edge. */
+.sidebar-row {
+  position: relative;
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
+}
+
+.sidebar-row::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 2px;
+  inset-block: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: var(--radius-full);
+  background: hsl(var(--primary));
+  transform: translateY(-50%);
+  transition: height var(--dur-base) var(--ease-spring);
+}
+
+.sidebar-row[data-selected]::before {
+  height: 16px;
+}
+
+.sidebar-row:active {
+  transform: scale(0.985);
+}
+
+.sidebar-mode {
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-base) var(--ease-out-soft);
+}
+
+@media (forced-colors: active) {
+  .sidebar-row[data-selected]::before {
+    background: Highlight;
+  }
+}
+
+/* Conversation rows carry the same growing accent bar as generic rows. */
+.sidebar-convo::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 2px;
+  inset-block: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: var(--radius-full);
+  background: hsl(var(--primary));
+  transform: translateY(-50%);
+  transition: height var(--dur-base) var(--ease-spring);
+}
+
+.sidebar-convo[data-active]::before {
+  height: 15px;
+}
+
+.sidebar-convo:active {
+  transform: scale(0.985);
+}
+
+@media (forced-colors: active) {
+  .sidebar-convo[data-active]::before {
+    background: Highlight;
+  }
+}
