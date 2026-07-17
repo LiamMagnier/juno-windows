@@ -1,5 +1,6 @@
 mod error;
 mod host;
+mod net;
 mod secrets;
 
 use tauri::{Emitter, Manager};
@@ -67,11 +68,21 @@ pub fn run() {
             }
             Ok(())
         })
+        .manage(net::NetState::new())
         .invoke_handler(tauri::generate_handler![
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,
             host::host_info,
+            net::auth::auth_configure,
+            net::auth::auth_exchange,
+            net::auth::auth_has_session,
+            net::auth::auth_sign_out,
+            net::commands::api_request,
+            net::stream::api_stream,
+            net::stream::api_stream_cancel,
+            net::upload::api_upload_path,
+            net::upload::api_upload_bytes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,23 +2,24 @@
  * Native device sign-in.
  *
  * Flow (juno/src/app/app-auth/page.tsx + api/v1/auth/token):
- *  1. generate state / nonce / PKCE verifier+challenge
+ *  1. generate state / nonce / PKCE verifier+challenge (webview)
  *  2. open the system browser at <backend>/app-auth?... (user signs in there)
  *  3. the handoff page redirects to com.liammagnier.juno://auth/callback?code&state&nonce
- *  4. the deep link lands here; validate state+nonce, exchange the code
- *     (with codeVerifier + installationId) for device credentials
+ *  4. the deep link lands here; validate state+nonce, then Rust exchanges the
+ *     code (PKCE + installationId) and keeps the credentials.
  */
+import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { backendBaseUrl, apiUrl } from "./config";
+import { backendBaseUrl } from "./config";
 import { createHandshake, randomSecret, type AuthHandshake } from "./pkce";
 import { hostInfo, secretGet, secretSet } from "../host";
-import { adoptTokens, clearTokens, parseErrorEnvelope } from "./tokens";
+import { clearTokens } from "./tokens";
 import { api } from "./http";
-import { BackendError, type DeviceSession, type SessionResponse, type TokenResponse } from "./types";
+import { BackendError, type DeviceSession, type SessionResponse } from "./types";
 
 export const REDIRECT_URI = "com.liammagnier.juno://auth/callback";
 
-/** Sign-in attempts expire with the server's 2-minute auth-code TTL. */
+/** Sign-in attempts expire alongside the server's short auth-code TTL. */
 const HANDSHAKE_TTL_MS = 10 * 60 * 1000;
 
 interface PendingSignIn extends AuthHandshake {
@@ -33,6 +34,11 @@ async function installationId(): Promise<string> {
   const fresh = `win.${randomSecret()}`;
   await secretSet("installation-id", fresh);
   return fresh;
+}
+
+/** Point the Rust transport at the configured backend. Call at startup and on env switch. */
+export function configureTransport(): Promise<void> {
+  return invoke("auth_configure", { baseUrl: backendBaseUrl() });
 }
 
 /** Opens the browser handoff. Resolves once the browser has been launched. */
@@ -55,7 +61,7 @@ export function cancelSignIn(): void {
 }
 
 export interface SignInResult {
-  deviceSession: DeviceSession;
+  deviceSession: DeviceSession | null;
 }
 
 /**
@@ -83,14 +89,16 @@ export async function completeSignIn(url: string): Promise<SignInResult | null> 
   const state = parsed.searchParams.get("state") ?? "";
   const nonce = parsed.searchParams.get("nonce") ?? "";
   if (!code || state !== handshake.state || nonce !== handshake.nonce) {
-    throw new BackendError(400, "handshake_mismatch", "Sign-in was rejected: the callback did not match this app's request.");
+    throw new BackendError(
+      400,
+      "handshake_mismatch",
+      "Sign-in was rejected: the callback did not match this app's request.",
+    );
   }
 
   const host = await hostInfo();
-  const res = await fetch(apiUrl("/v1/auth/token"), {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
+  try {
+    const result = await invoke<{ deviceSession: DeviceSession | null }>("auth_exchange", {
       code,
       codeVerifier: handshake.codeVerifier,
       redirectUri: REDIRECT_URI,
@@ -98,12 +106,16 @@ export async function completeSignIn(url: string): Promise<SignInResult | null> 
       deviceName: host.deviceName,
       platform: `windows-${host.arch}`,
       appVersion: host.appVersion,
-    }),
-  });
-  if (!res.ok) throw await parseErrorEnvelope(res);
-  const tokens = (await res.json()) as TokenResponse;
-  await adoptTokens(tokens);
-  return { deviceSession: tokens.deviceSession };
+    });
+    return { deviceSession: result.deviceSession };
+  } catch (err) {
+    const commandError = err as { code?: string; message?: string };
+    throw new BackendError(
+      400,
+      commandError.code ?? "invalid_grant",
+      commandError.message ?? "Sign-in failed.",
+    );
+  }
 }
 
 export function fetchSession(signal?: AbortSignal): Promise<SessionResponse> {
@@ -111,11 +123,6 @@ export function fetchSession(signal?: AbortSignal): Promise<SessionResponse> {
 }
 
 export async function signOut(): Promise<void> {
-  try {
-    await api("/v1/auth/logout", { method: "POST" });
-  } catch {
-    // Revoking server-side is best-effort; the device must sign out regardless.
-  }
   await clearTokens();
 }
 

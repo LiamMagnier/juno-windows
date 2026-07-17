@@ -10,12 +10,10 @@ use crate::error::CommandError;
 const SERVICE: &str = "dev.liams.juno.windows";
 
 /// Only these keys may be stored. Keeping the list closed means a compromised
-/// webview cannot use this surface as a general vault reader/writer.
-const ALLOWED_KEYS: &[&str] = &[
-    "refresh-token",
-    "installation-id",
-    "workspace-grants",
-];
+/// webview cannot use this surface as a general vault reader/writer. The
+/// refresh token is deliberately NOT here — it is owned by net::auth and
+/// never crosses into the webview.
+const ALLOWED_KEYS: &[&str] = &["installation-id", "workspace-grants"];
 
 fn entry_for(key: &str) -> Result<keyring::Entry, CommandError> {
     if !ALLOWED_KEYS.contains(&key) {

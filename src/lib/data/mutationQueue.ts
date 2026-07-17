@@ -11,8 +11,7 @@
  * - create ops carry clientEntityId (a local UUID); the result's
  *   entityMappings adopts the server cuid.
  */
-import { apiUrl } from "../backend/config";
-import { getAccessToken, parseErrorEnvelope } from "../backend/tokens";
+import { api } from "../backend/http";
 import { BackendError } from "../backend/types";
 import { dbDelete, dbGetAllEntries, dbPut } from "./db";
 import { revisionOf, useDataStore } from "@/state/dataStore";
@@ -129,23 +128,10 @@ export async function enqueueMutation(
   void flushQueue();
 }
 
-async function postMutation(body: string): Promise<MutationOutcome> {
-  const token = await getAccessToken();
-  let res = await fetch(apiUrl("/v1/mutations"), {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body,
-  });
-  if (res.status === 401) {
-    const fresh = await getAccessToken({ forceRefresh: true });
-    res = await fetch(apiUrl("/v1/mutations"), {
-      method: "POST",
-      headers: { authorization: `Bearer ${fresh}`, "content-type": "application/json" },
-      body,
-    });
-  }
-  if (!res.ok) throw await parseErrorEnvelope(res);
-  return (await res.json()) as MutationOutcome;
+function postMutation(body: string): Promise<MutationOutcome> {
+  // `body` is the stored pre-serialized string — api() sends strings verbatim
+  // so replays stay byte-identical for the server's idempotency hash.
+  return api<MutationOutcome>("/v1/mutations", { method: "POST", body });
 }
 
 function applyOutcome(record: QueuedMutation, outcome: MutationOutcome): void {

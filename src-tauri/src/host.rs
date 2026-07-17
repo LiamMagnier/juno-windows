@@ -11,7 +11,6 @@ pub struct HostInfo {
 
 #[tauri::command]
 pub fn host_info(app: tauri::AppHandle) -> HostInfo {
-    use tauri::Manager;
     let device_name = hostname();
     HostInfo {
         device_name,

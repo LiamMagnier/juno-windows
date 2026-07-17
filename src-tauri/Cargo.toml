@@ -24,7 +24,12 @@ tauri-plugin-window-state = "2.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-keyring = { version = "4", features = ["windows-native", "apple-native"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "multipart", "rustls-tls", "gzip"] }
+tokio = { version = "1", features = ["sync", "time", "macros", "rt"] }
+tokio-util = "0.7"
+futures-util = "0.3"
+mime_guess = "2"
+keyring = { version = "3", features = ["windows-native", "apple-native"] }
 portable-pty = "0.9"
 similar = { version = "3", features = ["text", "unicode"] }
 ignore = "0.4"

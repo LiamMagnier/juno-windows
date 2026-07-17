@@ -3,6 +3,8 @@
  *
  * restoring -> signedOut -> authorizing -> signedIn
  *                   ^------------------------|  (sign-out / revocation)
+ *
+ * Credentials live in Rust; this store only tracks status + profile.
  */
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
@@ -10,10 +12,12 @@ import {
   beginSignIn,
   cancelSignIn,
   completeSignIn,
+  configureTransport,
   fetchSession,
   signOut as signOutBackend,
 } from "@/lib/backend/auth";
-import { hasStoredSession, setSessionRevokedHandler } from "@/lib/backend/tokens";
+import { hasStoredSession, onSessionRevoked } from "@/lib/backend/tokens";
+import { purgeLocalData } from "@/lib/data/syncEngine";
 import { BackendError, type DeviceSession, type Profile } from "@/lib/backend/types";
 
 export type AuthStatus = "restoring" | "signedOut" | "authorizing" | "signedIn";
@@ -38,7 +42,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   async restore() {
-    setSessionRevokedHandler(() => {
+    await configureTransport();
+    await onSessionRevoked(() => {
+      void purgeLocalData();
       set({ status: "signedOut", profile: null, deviceSession: null });
     });
     try {
@@ -58,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ status: "signedOut", profile: null, deviceSession: null });
       } else {
         // Offline with a stored session: keep the user signed in; data layers
-        // handle their own retries.
+        // handle their own retries against the local cache.
         set({ status: (await hasStoredSession()) ? "signedIn" : "signedOut" });
       }
     }
@@ -67,6 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   async signIn() {
     set({ status: "authorizing", error: null });
     try {
+      await configureTransport();
       await beginSignIn();
     } catch (err) {
       set({
@@ -113,6 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   async signOut() {
     await signOutBackend();
+    await purgeLocalData();
     set({ status: "signedOut", profile: null, deviceSession: null, error: null });
   },
 }));
