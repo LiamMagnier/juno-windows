@@ -3,13 +3,15 @@
   z-index: 1000;
   min-width: 180px;
   padding: 4px;
-  background: hsl(var(--popover) / 0.92);
-  backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-float);
   outline: none;
+  transform-origin: var(--menu-origin, top left);
   animation: context-menu-in var(--dur-fast) var(--ease-out-expo);
 }
 

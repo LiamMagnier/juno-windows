@@ -599,13 +599,15 @@
   max-height: 60vh;
   display: flex;
   flex-direction: column;
-  background: hsl(var(--popover) / 0.92);
-  backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-float);
   box-shadow: var(--shadow-float);
   overflow: hidden;
-  animation: sidebar-palette-in var(--dur-base) var(--ease-out-expo);
+  transform-origin: top center;
+  animation: sidebar-palette-in var(--dur-base) var(--ease-spring);
 }
 
 @keyframes sidebar-palette-in {

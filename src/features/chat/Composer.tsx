@@ -15,17 +15,23 @@ import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   ArrowUp,
-  Blocks,
+  Brain,
+  Check,
   FileText,
   Folder,
   Globe,
+  ImagePlus,
+  Library,
   Loader2,
   Lock,
   LockOpen,
   Mic,
   Paperclip,
+  PencilRuler,
+  Plus,
   Sparkles,
   Square,
+  Telescope,
   X,
 } from "lucide-react";
 import { api } from "@/lib/backend/http";
@@ -45,6 +51,8 @@ import {
 } from "@/features/projects/projectContext";
 import { ChatPopover } from "./ChatPopover";
 import { ModelSelector } from "./ModelSelector";
+import { ReasoningSlider } from "./ReasoningSlider";
+import { LibraryPicker } from "./LibraryPicker";
 import { EFFORT_NONE, useChatPrefs } from "./chatPrefs";
 import {
   buildPrivateHistory,
@@ -128,11 +136,19 @@ export function Composer({
   stagedCountRef.current = staged.length;
   const [dragging, setDragging] = useState(false);
   const [effortOpen, setEffortOpen] = useState(false);
-  const [connectorsOpen, setConnectorsOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [connectors, setConnectors] = useState<ConnectorInfo[] | null>(null);
   const [connectorsError, setConnectorsError] = useState<string | null>(null);
   const [connectorsLoading, setConnectorsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Projects for the "Add to project" picker (new chats only).
+  const projects = useDataStore((s) => s.projects);
+  const projectList = useMemo(
+    () => Object.values(projects).sort((a, b) => a.name.localeCompare(b.name)),
+    [projects],
+  );
 
   const busy = status !== "idle";
   const quotaExhausted = quota?.remaining === 0;
@@ -160,6 +176,18 @@ export function Composer({
       prefs.connectorsByThread[threadKey] ?? conversation?.activeConnectors ?? [],
     [prefs.connectorsByThread, threadKey, conversation?.activeConnectors],
   );
+
+  // ---- canvas + deep research ----
+  const canvasOn = prefs.canvas;
+  const deepResearch = !privateMode && (prefs.deepResearchByThread[threadKey] ?? false);
+  // Count everything the "+" menu currently has enabled, for its badge.
+  const addActiveCount =
+    (deepResearch ? 1 : 0) + (canvasOn ? 0 : 1) + selectedConnectors.length + (pendingProject ? 1 : 0);
+
+  const chooseProject = (id: string | null) => {
+    setPendingProjectId(id);
+    setPendingProject(id);
+  };
 
   const loadConnectors = useCallback(async () => {
     setConnectorsLoading(true);
@@ -222,6 +250,28 @@ export function Composer({
     const paths = Array.isArray(picked) ? picked : picked ? [picked] : [];
     addPaths(paths);
   }, [addPaths]);
+
+  const pickImages = useCallback(async () => {
+    const picked = await openFileDialog({
+      multiple: true,
+      title: "Add photos",
+      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "heic"] }],
+    });
+    const paths = Array.isArray(picked) ? picked : picked ? [picked] : [];
+    addPaths(paths);
+  }, [addPaths]);
+
+  const attachFromLibrary = useCallback(
+    (attachments: ClientAttachment[]) => {
+      const room = MAX_ATTACHMENTS - stagedCountRef.current;
+      for (const attachment of attachments.slice(0, Math.max(0, room))) {
+        const localId = crypto.randomUUID();
+        stagedCountRef.current += 1;
+        setStaged((s) => [...s, { localId, fileName: attachment.fileName, status: "done", attachment }]);
+      }
+    },
+    [],
+  );
 
   const onPaste = useCallback(
     (e: React.ClipboardEvent) => {
@@ -306,6 +356,8 @@ export function Composer({
         ...(supportsWebSearch ? { webSearch: prefs.webSearch } : {}),
         ...(selectedEffort ? { reasoningEffort: selectedEffort } : {}),
         ...(!privateMode ? { connectors: selectedConnectors.slice(0, 5) } : {}),
+        ...(!privateMode ? { canvasEnabled: canvasOn } : {}),
+        ...(deepResearch ? { deepResearch: true } : {}),
         ...(privateMode
           ? {
               privateMode: true,
@@ -334,6 +386,8 @@ export function Composer({
       prefs.webSearch,
       selectedEffort,
       selectedConnectors,
+      canvasOn,
+      deepResearch,
     ],
   );
 
@@ -511,6 +565,175 @@ export function Composer({
         />
 
         <div className="chat-controls">
+          {!privateMode ? (
+            <div className="chat-pop-wrap">
+              <button
+                type="button"
+                className="chat-control-toggle chat-add-btn"
+                aria-haspopup="menu"
+                aria-expanded={addOpen}
+                aria-label="Add attachments, canvas, research, projects and connectors"
+                title="Add"
+                data-active={addActiveCount > 0 || undefined}
+                disabled={busy}
+                onClick={() => {
+                  const next = !addOpen;
+                  setAddOpen(next);
+                  if (next && connectors === null && !connectorsLoading) void loadConnectors();
+                }}
+              >
+                <Plus size={17} aria-hidden />
+                {addActiveCount > 0 ? (
+                  <span className="chat-control-count">{addActiveCount}</span>
+                ) : null}
+              </button>
+              <ChatPopover open={addOpen} onClose={() => setAddOpen(false)} label="Add" width={300}>
+                <div className="chat-addmenu" role="menu" aria-label="Add">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="chat-menu-item chat-menu-row"
+                    disabled={staged.length >= MAX_ATTACHMENTS}
+                    onClick={() => {
+                      setAddOpen(false);
+                      void pickImages();
+                    }}
+                  >
+                    <ImagePlus size={16} aria-hidden />
+                    <span className="chat-menu-row-name">Add photos</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="chat-menu-item chat-menu-row"
+                    disabled={staged.length >= MAX_ATTACHMENTS}
+                    onClick={() => {
+                      setAddOpen(false);
+                      void pickFiles();
+                    }}
+                  >
+                    <Paperclip size={16} aria-hidden />
+                    <span className="chat-menu-row-name">Add files</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="chat-menu-item chat-menu-row"
+                    disabled={staged.length >= MAX_ATTACHMENTS}
+                    onClick={() => {
+                      setAddOpen(false);
+                      setLibraryOpen(true);
+                    }}
+                  >
+                    <Library size={16} aria-hidden />
+                    <span className="chat-menu-row-name">From your library</span>
+                  </button>
+
+                  <div className="chat-menu-sep" role="separator" />
+
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={canvasOn}
+                    className="chat-menu-item chat-menu-row"
+                    data-selected={canvasOn || undefined}
+                    onClick={() => prefs.setCanvas(!canvasOn)}
+                  >
+                    <PencilRuler size={16} aria-hidden />
+                    <span className="chat-menu-row-name">Canvas &amp; artifacts</span>
+                    {canvasOn ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={deepResearch}
+                    className="chat-menu-item chat-menu-row"
+                    data-selected={deepResearch || undefined}
+                    onClick={() => prefs.setDeepResearch(threadKey, !deepResearch)}
+                  >
+                    <Telescope size={16} aria-hidden />
+                    <span className="chat-menu-row-name">Deep research</span>
+                    {deepResearch ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                  </button>
+
+                  {isNewChat && projectList.length > 0 ? (
+                    <>
+                      <div className="chat-menu-sep" role="separator" />
+                      <div className="chat-popover-title">Add to project</div>
+                      <div className="chat-addmenu-scroll">
+                        {projectList.map((p) => {
+                          const active = pendingProject === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              role="menuitemcheckbox"
+                              aria-checked={active}
+                              className="chat-menu-item chat-menu-row"
+                              data-selected={active || undefined}
+                              onClick={() => chooseProject(active ? null : p.id)}
+                            >
+                              <Folder size={16} aria-hidden />
+                              <span className="chat-menu-row-name">{p.name}</span>
+                              {active ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : null}
+
+                  <div className="chat-menu-sep" role="separator" />
+                  <div className="chat-popover-title">Use connectors</div>
+                  {connectorsLoading ? (
+                    <div className="chat-popover-empty">
+                      <Loader2 size={14} className="chat-spin" aria-hidden /> Loading…
+                    </div>
+                  ) : connectorsError ? (
+                    <div className="chat-popover-empty">
+                      <span>{connectorsError}</span>
+                      <button type="button" className="btn btn-secondary" onClick={() => void loadConnectors()}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : connectors && connectors.length === 0 ? (
+                    <div className="chat-popover-empty">
+                      No connectors yet. Connect apps from the Connections page.
+                    </div>
+                  ) : (
+                    <div className="chat-addmenu-scroll">
+                      {connectors?.map((connector) => {
+                        const checked = selectedConnectors.includes(connector.id);
+                        const capped = !checked && selectedConnectors.length >= 5;
+                        return (
+                          <label
+                            key={connector.id}
+                            className="chat-connector-row"
+                            data-disabled={capped || undefined}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={capped}
+                              onChange={() => toggleConnector(connector.id)}
+                            />
+                            <span className="chat-connector-label">{connector.label}</span>
+                            {connector.accountLabel ? (
+                              <span className="chat-connector-account">{connector.accountLabel}</span>
+                            ) : null}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {connectors && connectors.length > 0 ? (
+                    <div className="chat-connectors-hint">Up to 5 per conversation</div>
+                  ) : null}
+                </div>
+              </ChatPopover>
+            </div>
+          ) : null}
+
           <ModelSelector
             models={models}
             selectedId={modelId}
@@ -526,37 +749,27 @@ export function Composer({
               <button
                 type="button"
                 className="chat-control-pill"
-                aria-haspopup="menu"
+                aria-haspopup="dialog"
                 aria-expanded={effortOpen}
+                aria-label={`Thinking effort: ${effortDisplay}`}
                 disabled={busy}
                 onClick={() => setEffortOpen((v) => !v)}
               >
-                <Sparkles size={13} aria-hidden />
+                <Brain size={13} aria-hidden />
                 <span>{effortDisplay}</span>
               </button>
               <ChatPopover
                 open={effortOpen}
                 onClose={() => setEffortOpen(false)}
-                label="Reasoning effort"
-                width={180}
+                label="Thinking effort"
+                width={272}
               >
-                <div role="menu" aria-label="Reasoning effort">
-                  {efforts.map((option) => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={option.value === selectedEffort}
-                      className="chat-menu-item"
-                      data-selected={option.value === selectedEffort || undefined}
-                      onClick={() => {
-                        prefs.setEffort(model.id, option.value);
-                        setEffortOpen(false);
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                <div className="chat-thinking-pop">
+                  <ReasoningSlider
+                    options={efforts}
+                    value={selectedEffort}
+                    onChange={(v) => prefs.setEffort(model.id, v)}
+                  />
                 </div>
               </ChatPopover>
             </div>
@@ -575,102 +788,6 @@ export function Composer({
             >
               <Globe size={15} aria-hidden />
             </button>
-          ) : null}
-
-          <button
-            type="button"
-            className="chat-control-toggle"
-            aria-label="Attach files"
-            title="Attach files"
-            disabled={busy || privateMode || staged.length >= MAX_ATTACHMENTS}
-            onClick={() => void pickFiles()}
-          >
-            <Paperclip size={15} aria-hidden />
-          </button>
-
-          {!privateMode ? (
-            <div className="chat-pop-wrap">
-              <button
-                type="button"
-                className="chat-control-toggle"
-                aria-haspopup="dialog"
-                aria-expanded={connectorsOpen}
-                aria-label="Connectors"
-                title="Connectors"
-                data-active={selectedConnectors.length > 0 || undefined}
-                disabled={busy}
-                onClick={() => {
-                  const next = !connectorsOpen;
-                  setConnectorsOpen(next);
-                  if (next && connectors === null && !connectorsLoading) {
-                    void loadConnectors();
-                  }
-                }}
-              >
-                <Blocks size={15} aria-hidden />
-                {selectedConnectors.length > 0 ? (
-                  <span className="chat-control-count">{selectedConnectors.length}</span>
-                ) : null}
-              </button>
-              <ChatPopover
-                open={connectorsOpen}
-                onClose={() => setConnectorsOpen(false)}
-                label="Connectors"
-                width={280}
-              >
-                <div className="chat-connectors">
-                  <div className="chat-popover-title">Use connectors</div>
-                  {connectorsLoading ? (
-                    <div className="chat-popover-empty">
-                      <Loader2 size={14} className="chat-spin" aria-hidden /> Loading…
-                    </div>
-                  ) : connectorsError ? (
-                    <div className="chat-popover-empty">
-                      <span>{connectorsError}</span>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => void loadConnectors()}
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  ) : connectors && connectors.length === 0 ? (
-                    <div className="chat-popover-empty">
-                      No connectors yet. Connect apps from the Connections page.
-                    </div>
-                  ) : (
-                    connectors?.map((connector) => {
-                      const checked = selectedConnectors.includes(connector.id);
-                      const capped = !checked && selectedConnectors.length >= 5;
-                      return (
-                        <label
-                          key={connector.id}
-                          className="chat-connector-row"
-                          data-disabled={capped || undefined}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            disabled={capped}
-                            onChange={() => toggleConnector(connector.id)}
-                          />
-                          <span className="chat-connector-label">{connector.label}</span>
-                          {connector.accountLabel ? (
-                            <span className="chat-connector-account">
-                              {connector.accountLabel}
-                            </span>
-                          ) : null}
-                        </label>
-                      );
-                    })
-                  )}
-                  {connectors && connectors.length > 0 ? (
-                    <div className="chat-connectors-hint">Up to 5 per conversation</div>
-                  ) : null}
-                </div>
-              </ChatPopover>
-            </div>
           ) : null}
 
           <button
@@ -734,6 +851,13 @@ export function Composer({
           ? "Private chats aren't saved or added to memory."
           : "Juno can be wrong — worth a second look on anything that matters."}
       </p>
+
+      <LibraryPicker
+        open={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onAttach={attachFromLibrary}
+        remaining={MAX_ATTACHMENTS - staged.length}
+      />
     </div>
   );
 }

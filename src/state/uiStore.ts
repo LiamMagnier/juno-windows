@@ -1,6 +1,7 @@
 /** Window-level UI preferences, persisted locally (not account data). */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { applyWindowMaterial, watchReducedTransparency } from "@/lib/material";
 
 export type ThemePreference = "system" | "light" | "dark";
 export type AccentName = "coral" | "teal" | "violet" | "amber" | "sage";
@@ -19,6 +20,8 @@ export type MainView =
 interface UiState {
   theme: ThemePreference;
   accent: AccentName;
+  /** Win11 translucency (Mica/Acrylic). Off forces fully opaque surfaces. */
+  transparency: boolean;
   mode: AppMode;
   view: MainView;
   settingsOpen: boolean;
@@ -26,6 +29,7 @@ interface UiState {
   sidebarWidth: number;
   setTheme(theme: ThemePreference): void;
   setAccent(accent: AccentName): void;
+  setTransparency(on: boolean): void;
   setMode(mode: AppMode): void;
   setView(view: MainView): void;
   openSettings(open: boolean): void;
@@ -42,6 +46,7 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       theme: "system",
       accent: "coral",
+      transparency: true,
       mode: "chat",
       view: { kind: "chat" },
       settingsOpen: false,
@@ -49,6 +54,7 @@ export const useUiStore = create<UiState>()(
       sidebarWidth: 280,
       setTheme: (theme) => set({ theme }),
       setAccent: (accent) => set({ accent }),
+      setTransparency: (transparency) => set({ transparency }),
       setMode: (mode) =>
         set({ mode, view: mode === "code" ? { kind: "code" } : { kind: "chat" } }),
       setView: (view) => set({ view }),
@@ -62,6 +68,7 @@ export const useUiStore = create<UiState>()(
       partialize: (s) => ({
         theme: s.theme,
         accent: s.accent,
+        transparency: s.transparency,
         mode: s.mode,
         sidebarCollapsed: s.sidebarCollapsed,
         sidebarWidth: s.sidebarWidth,
@@ -70,11 +77,11 @@ export const useUiStore = create<UiState>()(
   ),
 );
 
-/** Applies theme + accent to <html>; returns a cleanup for the system listener. */
+/** Applies theme + accent + window material to <html>; returns a cleanup. */
 export function applyThemeToDocument(): () => void {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const apply = () => {
-    const { theme, accent } = useUiStore.getState();
+    const { theme, accent, transparency } = useUiStore.getState();
     const dark = theme === "dark" || (theme === "system" && media.matches);
     document.documentElement.classList.toggle("dark", dark);
     if (accent === "coral") {
@@ -82,12 +89,15 @@ export function applyThemeToDocument(): () => void {
     } else {
       document.documentElement.setAttribute("data-accent", accent);
     }
+    void applyWindowMaterial(dark, transparency);
   };
   apply();
   media.addEventListener("change", apply);
+  const unwatchTransparency = watchReducedTransparency(apply);
   const unsubscribe = useUiStore.subscribe(apply);
   return () => {
     media.removeEventListener("change", apply);
+    unwatchTransparency();
     unsubscribe();
   };
 }

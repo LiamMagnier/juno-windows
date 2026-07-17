@@ -44,6 +44,8 @@
   --warning: 36 70% 46%;
   --source: 190 60% 36%;
   --ultra: 258 90% 66%;
+  --ultra-from: 252 100% 68%;
+  --ultra-to: 271 91% 65%;
 
   /* ---- Lines & fills ---- */
   --border: 30 8% 13% / 0.08;
@@ -95,6 +97,25 @@
   --dur-fast: 120ms;
   --dur-base: 220ms;
   --dur-slow: 360ms;
+
+  /* ---- Windows 11 material (Mica base + Acrylic flyouts) ----
+     Chrome (titlebar/sidebar/flyouts) is a translucent tint over the window
+     backdrop; a backdrop-filter blur turns that into Acrylic. Alphas are tuned
+     to read the same whether the backdrop is real Mica (window transparent) or
+     the app's own opaque material (no native backdrop). `.no-transparency`
+     collapses all of this to solid fills. */
+  --acrylic-blur: 30px;
+  --acrylic-saturate: 1.8;
+  --titlebar-fill: hsl(var(--titlebar) / 0.36);
+  --sidebar-fill: hsl(var(--sidebar) / 0.62);
+  --flyout-fill: hsl(var(--popover) / 0.80);
+  --flyout-blur: 26px;
+  /* The in-app Mica substitute: a warm wash used only when no OS backdrop is
+     available, so the translucent chrome still has something to blur. */
+  --material-wash:
+    radial-gradient(120% 90% at 8% 0%, hsl(var(--primary) / 0.05), transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, hsl(var(--ultra) / 0.035), transparent 50%);
+  --window-radius: 8px;
 }
 
 .dark {
@@ -126,6 +147,8 @@
   --warning: 38 78% 58%;
   --source: 190 55% 56%;
   --ultra: 258 92% 74%;
+  --ultra-from: 252 100% 76%;
+  --ultra-to: 271 93% 73%;
 
   --border: 0 0% 100% / 0.09;
   --input-border: 0 0% 100% / 0.12;
@@ -147,6 +170,39 @@
   --shadow-float: 0 4px 16px -4px hsl(0 0% 0% / 0.45), 0 16px 40px -12px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(40 14% 92% / 0.06);
   --shadow-pop: 0 1px 2px hsl(0 0% 0% / 0.4), 0 3px 8px -2px hsl(0 0% 0% / 0.5), 0 10px 22px -10px hsl(0 0% 0% / 0.5);
   --well-inset: inset 0 1px 2px hsl(0 0% 0% / 0.38);
+
+  /* Dark chrome leans a touch more opaque so text stays legible over Mica. */
+  --titlebar-fill: hsl(var(--titlebar) / 0.42);
+  --sidebar-fill: hsl(var(--sidebar) / 0.58);
+  --flyout-fill: hsl(var(--popover) / 0.72);
+  --material-wash:
+    radial-gradient(120% 90% at 8% 0%, hsl(var(--primary) / 0.08), transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, hsl(var(--ultra) / 0.06), transparent 50%);
+}
+
+/*
+ * Opaque fallback: user turned transparency off, or the OS asked for reduced
+ * transparency. All chrome becomes solid and blurs are dropped — no material,
+ * full legibility, lower GPU cost.
+ */
+:root.no-transparency {
+  --titlebar-fill: hsl(var(--titlebar));
+  --sidebar-fill: hsl(var(--sidebar));
+  --flyout-fill: hsl(var(--popover));
+  --acrylic-blur: 0px;
+  --flyout-blur: 0px;
+  --material-wash: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --titlebar-fill: hsl(var(--titlebar));
+    --sidebar-fill: hsl(var(--sidebar));
+    --flyout-fill: hsl(var(--popover));
+    --acrylic-blur: 0px;
+    --flyout-blur: 0px;
+    --material-wash: none;
+  }
 }
 
 /* ---- Accent variants (synced with the account's accent setting) ---- */
@@ -171,5 +227,12 @@
     --shadow-float: none;
     --shadow-pop: none;
     --well-inset: none;
+    /* System palette owns the surfaces; translucency would fight it. */
+    --titlebar-fill: Canvas;
+    --sidebar-fill: Canvas;
+    --flyout-fill: Canvas;
+    --acrylic-blur: 0px;
+    --flyout-blur: 0px;
+    --material-wash: none;
   }
 }

@@ -20,12 +20,18 @@ interface ChatPrefsState {
   /** model id -> explicit effort pick ("none" = instant). Absent = model default. */
   effortByModel: Record<string, StoredEffort>;
   webSearch: boolean;
+  /** Canvas/artifact generation. On by default; persists across chats. */
+  canvas: boolean;
+  /** Deep-research mode for the next send. Ephemeral per thread. */
+  deepResearchByThread: Record<string, boolean>;
   /** threadKey -> connector ids selected for the next send. */
   connectorsByThread: Record<string, string[]>;
 
   setModel(threadKey: string, modelId: string): void;
   setEffort(modelId: string, effort: ReasoningEffort | null): void;
   setWebSearch(on: boolean): void;
+  setCanvas(on: boolean): void;
+  setDeepResearch(threadKey: string, on: boolean): void;
   setConnectors(threadKey: string, ids: string[]): void;
 }
 
@@ -36,6 +42,8 @@ export const useChatPrefs = create<ChatPrefsState>()(
       modelByThread: {},
       effortByModel: {},
       webSearch: false,
+      canvas: true,
+      deepResearchByThread: {},
       connectorsByThread: {},
 
       setModel: (threadKey, modelId) =>
@@ -48,6 +56,11 @@ export const useChatPrefs = create<ChatPrefsState>()(
           effortByModel: { ...s.effortByModel, [modelId]: effort ?? EFFORT_NONE },
         })),
       setWebSearch: (webSearch) => set({ webSearch }),
+      setCanvas: (canvas) => set({ canvas }),
+      setDeepResearch: (threadKey, on) =>
+        set((s) => ({
+          deepResearchByThread: { ...s.deepResearchByThread, [threadKey]: on },
+        })),
       setConnectors: (threadKey, ids) =>
         set((s) => ({
           connectorsByThread: { ...s.connectorsByThread, [threadKey]: ids },
@@ -55,7 +68,7 @@ export const useChatPrefs = create<ChatPrefsState>()(
     }),
     {
       name: "juno.chat.prefs",
-      partialize: (s) => ({ lastModel: s.lastModel, webSearch: s.webSearch }),
+      partialize: (s) => ({ lastModel: s.lastModel, webSearch: s.webSearch, canvas: s.canvas }),
     },
   ),
 );

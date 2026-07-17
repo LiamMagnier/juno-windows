@@ -27,6 +27,10 @@ export interface SendOptions {
   attachmentIds?: string[];
   attachments?: ClientAttachment[]; // for the optimistic bubble
   webSearch?: boolean;
+  /** Canvas/artifact behavior; defaults to on for saved chats. */
+  canvasEnabled?: boolean;
+  /** Deep-research mode (plan → search → read → cited report). Saved chats only. */
+  deepResearch?: boolean;
   reasoningEffort?: ReasoningEffort;
   connectors?: string[];
   privateMode?: boolean;
@@ -191,7 +195,7 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
   const body: Record<string, unknown> = {
     model: options.model,
     client: "app",
-    canvasEnabled: !privateMode,
+    canvasEnabled: privateMode ? false : (options.canvasEnabled ?? true),
     generationId,
   };
   if (options.regenerate) body.regenerate = true;
@@ -202,6 +206,8 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
   }
   if (options.attachmentIds?.length) body.attachmentIds = options.attachmentIds;
   if (options.webSearch !== undefined) body.webSearch = options.webSearch;
+  // Deep research is a saved-chat capability; never send it in private mode.
+  if (!privateMode && options.deepResearch) body.deepResearch = true;
   if (options.reasoningEffort) body.reasoningEffort = options.reasoningEffort;
   if (!privateMode && options.connectors) body.connectors = options.connectors;
   if (privateMode) {

@@ -13,7 +13,9 @@ body,
 }
 
 body {
-  background: hsl(var(--background));
+  /* The OS window is transparent; the app's material is painted by .app-frame
+     so a missing native backdrop never leaves the window see-through. */
+  background: transparent;
   color: hsl(var(--foreground));
   font-family: var(--font-sans);
   font-size: var(--text-body);

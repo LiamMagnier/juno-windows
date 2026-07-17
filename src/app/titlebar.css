@@ -4,7 +4,8 @@
   justify-content: space-between;
   height: 32px;
   flex: 0 0 32px;
-  background: hsl(var(--titlebar));
+  /* Translucent so the window material reads edge-to-edge across the top. */
+  background: var(--titlebar-fill);
   -webkit-app-region: drag;
 }
 

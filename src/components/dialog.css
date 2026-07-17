@@ -21,7 +21,9 @@
   max-height: calc(100vh - 96px);
   display: flex;
   flex-direction: column;
-  background: hsl(var(--popover));
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-float);

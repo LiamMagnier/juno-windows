@@ -13,10 +13,16 @@ export function Titlebar() {
   useEffect(() => {
     const win = getCurrentWindow();
     let unlisten: (() => void) | undefined;
-    void win.isMaximized().then(setMaximized);
+    // A maximized/snapped window is square-cropped by the OS, so drop the
+    // app-frame's rounded corners to match (see app.css --window-radius).
+    const sync = (isMax: boolean) => {
+      setMaximized(isMax);
+      document.documentElement.toggleAttribute("data-maximized", isMax);
+    };
+    void win.isMaximized().then(sync);
     void win
       .onResized(async () => {
-        setMaximized(await win.isMaximized());
+        sync(await win.isMaximized());
       })
       .then((fn) => {
         unlisten = fn;

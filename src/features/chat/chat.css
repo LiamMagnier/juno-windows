@@ -61,8 +61,9 @@
   font-size: var(--text-caption);
   font-weight: 600;
   color: hsl(var(--popover-foreground));
-  background: hsl(var(--popover) / 0.92);
-  backdrop-filter: blur(24px);
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur));
+  backdrop-filter: blur(var(--flyout-blur));
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-float);
@@ -884,13 +885,19 @@
   left: 0;
   z-index: 300;
   padding: 6px;
-  background: hsl(var(--popover) / 0.92);
-  backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--hairline-strong));
   border-radius: var(--radius-float);
   box-shadow: var(--shadow-float);
-  animation: chat-pop-in var(--dur-fast) var(--ease-out-expo);
+  transform-origin: bottom left;
+  animation: chat-pop-in var(--dur-base) var(--ease-spring);
+}
+
+.chat-popover[data-align="end"] {
+  transform-origin: bottom right;
 }
 
 .chat-popover[data-align="end"] {
@@ -1296,4 +1303,370 @@
     forced-color-adjust: none;
     border: 1px solid CanvasText;
   }
+}
+
+/* ============================================================
+   Thinking-effort slider (ReasoningSlider.tsx)
+   TRACK 32 = PAD 4 + LANE 24 + PAD 4. Thumb = LANE = 24, so at
+   stop 0 the coral fill's right cap sits exactly under the thumb
+   (no halo). Fill + thumb ride LANE-sized carriers and animate
+   `transform` in lockstep, never `left`/`width`.
+   ============================================================ */
+.rs {
+  --rs-thumb: 24px;
+  width: 240px;
+  max-width: 100%;
+  user-select: none;
+}
+
+.rs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.rs-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: hsl(var(--muted-foreground));
+}
+
+.rs-tier {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  transition: color var(--dur-base) var(--ease-out-soft);
+}
+
+.rs[data-top] .rs-tier {
+  color: hsl(var(--ultra));
+}
+
+.rs-track {
+  position: relative;
+  height: 32px;
+  width: 100%;
+  border-radius: var(--radius-full);
+  background: hsl(var(--muted) / 0.7);
+  box-shadow: var(--well-inset);
+}
+
+.rs[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Lane window: clips the fill to the 24px lane and lends its left cap. */
+.rs-lane {
+  position: absolute;
+  inset: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+}
+
+.rs-fill-carrier {
+  position: absolute;
+  inset: 0;
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+
+/* Pill THUMB-wide at its right end, running off the left of the clip, so growth
+   is pure translation. Its right cap keeps a true radius and rides under the
+   thumb. */
+.rs-fill {
+  position: absolute;
+  inset-block: 0;
+  left: -100%;
+  width: calc(100% + var(--rs-thumb));
+  border-radius: var(--radius-full);
+  background: hsl(var(--primary));
+  overflow: hidden;
+}
+
+.rs[data-top] .rs-fill {
+  background: transparent;
+}
+
+.rs-fill-ultra {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)),
+    hsl(var(--ultra-from)),
+    hsl(var(--ultra-to)),
+    hsl(var(--ultra-from)),
+    hsl(var(--primary))
+  );
+  background-size: 200% 100%;
+}
+
+.rs-dot {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  transform: translate(-50%, -50%);
+  transition: opacity var(--dur-fast) var(--ease-out-soft);
+}
+
+.rs-dot[data-state="under"] {
+  opacity: 0;
+}
+.rs-dot[data-state="filled"] {
+  background: hsl(var(--primary-foreground) / 0.45);
+}
+.rs-dot[data-state="empty"] {
+  background: hsl(var(--foreground) / 0.2);
+}
+
+.rs-thumb-carrier {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline: 4px;
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+
+.rs-thumb {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--rs-thumb);
+  height: var(--rs-thumb);
+  transform: translateY(-50%);
+  border-radius: var(--radius-full);
+  background: #fff;
+  box-shadow: var(--shadow-pop);
+  border: 1px solid hsl(0 0% 0% / 0.06);
+}
+
+.rs[data-top] .rs-thumb {
+  animation: rs-ultra-pop var(--dur-slow) var(--ease-spring);
+}
+
+/* Transparent range on top owns all interaction + a11y. */
+.rs-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.rs-input:disabled {
+  cursor: not-allowed;
+}
+.rs-input:focus-visible {
+  outline: none;
+}
+.rs-input:focus-visible + .rs-thumb,
+.rs-track:has(.rs-input:focus-visible) .rs-thumb {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@keyframes rs-ultra-pop {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  45% {
+    transform: translateY(-50%) scale(1.16);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rs[data-top] .rs-fill-ultra {
+    animation: rs-ultra-pan 24s linear infinite;
+  }
+}
+
+@keyframes rs-ultra-pan {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .rs-fill {
+    background: Highlight;
+  }
+  .rs-thumb {
+    background: ButtonText;
+  }
+}
+
+/* ============================================================
+   Composer "+" add-menu, thinking popover, library picker
+   ============================================================ */
+.chat-add-btn {
+  color: hsl(var(--foreground));
+}
+
+.chat-addmenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+}
+
+.chat-menu-row {
+  position: relative;
+}
+
+.chat-menu-row svg:first-child {
+  color: hsl(var(--muted-foreground));
+  flex: none;
+}
+
+.chat-menu-row[data-selected] svg:first-child {
+  color: hsl(var(--primary));
+}
+
+.chat-menu-row-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-menu-check {
+  color: hsl(var(--primary));
+  flex: none;
+}
+
+.chat-menu-item:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.chat-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: hsl(var(--hairline));
+}
+
+.chat-addmenu-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.chat-thinking-pop {
+  padding: 6px 8px 8px;
+}
+
+/* ---- library picker ---- */
+.library-picker {
+  min-width: min(560px, 80vw);
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.library-picker-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 160px;
+  padding: 24px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: var(--text-body);
+}
+
+.library-grid {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.library-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius-card);
+  border: 1px solid hsl(var(--hairline));
+  background: hsl(var(--card));
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+}
+
+.library-tile:hover:not(:disabled) {
+  border-color: hsl(var(--primary) / 0.5);
+}
+
+.library-tile:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.library-tile[data-selected] {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary)), var(--shadow-soft);
+}
+
+.library-tile:disabled {
+  opacity: 0.45;
+}
+
+.library-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+  background: hsl(var(--muted));
+}
+
+.library-thumb-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+}
+
+.library-tile-name {
+  font-size: var(--text-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-tile-size {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: hsl(var(--muted-foreground));
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
 }

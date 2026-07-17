@@ -7,6 +7,7 @@ import {
   SavedTick,
   SectionTitle,
   SettingRow,
+  ToggleSetting,
   useSavedTick,
 } from "./controls";
 
@@ -24,6 +25,8 @@ export function GeneralSection() {
   const accent = useUiStore((s) => s.accent);
   const setTheme = useUiStore((s) => s.setTheme);
   const setAccent = useUiStore((s) => s.setAccent);
+  const transparency = useUiStore((s) => s.transparency);
+  const setTransparency = useUiStore((s) => s.setTransparency);
   const themeTick = useSavedTick();
   const accentTick = useSavedTick();
 
@@ -81,6 +84,13 @@ export function GeneralSection() {
           ))}
         </div>
       </SettingRow>
+
+      <ToggleSetting
+        label="Transparency effects"
+        hint="Mica and Acrylic materials on the sidebar, titlebar, and menus."
+        checked={transparency}
+        onChange={setTransparency}
+      />
 
       <DebouncedTextSetting
         label="Response language"

@@ -1,6 +1,7 @@
 mod code;
 mod error;
 mod host;
+mod material;
 mod net;
 mod secrets;
 
@@ -61,6 +62,10 @@ pub fn run() {
                     let _ = handle.emit(DEEP_LINK_EVENT, urls);
                 });
             }
+            // Paint a backdrop before the first frame. The window boots hidden
+            // (dark by default, matching the pre-theme background) and the
+            // frontend re-applies the resolved theme once it reads the setting.
+            material::apply_startup(app.handle(), true);
             Ok(())
         })
         .manage(net::NetState::new())
@@ -72,6 +77,7 @@ pub fn run() {
             secrets::secret_get,
             secrets::secret_delete,
             host::host_info,
+            material::set_window_material,
             net::auth::auth_configure,
             net::auth::auth_exchange,
             net::auth::auth_has_session,
