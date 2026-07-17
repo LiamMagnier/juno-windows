@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Titlebar } from "./Titlebar";
 import { SignIn } from "./SignIn";
 import { Shell } from "./Shell";
+import { AnnouncementBar } from "./AnnouncementBar";
 import { attachDeepLinkListener, useAuthStore } from "@/state/authStore";
 import { applyThemeToDocument } from "@/state/uiStore";
 import "./app.css";
@@ -39,7 +40,10 @@ export function App() {
       {!ready || status === "restoring" ? (
         <div className="app-restoring" role="status" aria-label="Starting Juno" />
       ) : status === "signedIn" ? (
-        <Shell />
+        <>
+          <AnnouncementBar />
+          <Shell />
+        </>
       ) : (
         <SignIn />
       )}
