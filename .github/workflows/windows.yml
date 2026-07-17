@@ -42,6 +42,12 @@ jobs:
       - name: Frontend tests
         run: npm test
 
+      - name: Placeholder frontendDist for Rust checks
+        # tauri::generate_context! requires ../dist to exist at macro-expansion
+        # time; the real dist is produced later by tauri build's beforeBuildCommand.
+        shell: bash
+        run: mkdir -p dist && printf '<!doctype html><title>Juno</title>' > dist/index.html
+
       - name: Rust formatting
         working-directory: src-tauri
         run: cargo fmt --check
