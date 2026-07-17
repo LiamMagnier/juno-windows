@@ -56,6 +56,10 @@ export function CodeTimeline({
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
 
+  // undoLastTurn only restores the most recent turn, so only the newest
+  // files row offers the button.
+  const lastFilesId = [...items].reverse().find((i) => i.kind === "files")?.id ?? null;
+
   const onScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -76,7 +80,13 @@ export function CodeTimeline({
           </p>
         ) : null}
         {items.map((item) => (
-          <TimelineRow key={item.id} item={item} undoBusy={undoBusy} onUndoTurn={onUndoTurn} />
+          <TimelineRow
+            key={item.id}
+            item={item}
+            undoBusy={undoBusy}
+            undoable={item.id === lastFilesId}
+            onUndoTurn={onUndoTurn}
+          />
         ))}
         {running ? (
           <div className="code-working" role="status">
@@ -92,10 +102,12 @@ export function CodeTimeline({
 function TimelineRow({
   item,
   undoBusy,
+  undoable,
   onUndoTurn,
 }: {
   item: CodeTimelineItem;
   undoBusy: boolean;
+  undoable: boolean;
   onUndoTurn(): void;
 }) {
   switch (item.kind) {
@@ -124,15 +136,17 @@ function TimelineRow({
             <span>
               {item.paths.length} file{item.paths.length === 1 ? "" : "s"} changed
             </span>
-            <button
-              type="button"
-              className="code-undo-btn"
-              disabled={undoBusy}
-              onClick={onUndoTurn}
-            >
-              <Undo2 size={14} aria-hidden />
-              Undo this turn
-            </button>
+            {undoable ? (
+              <button
+                type="button"
+                className="code-undo-btn"
+                disabled={undoBusy}
+                onClick={onUndoTurn}
+              >
+                <Undo2 size={14} aria-hidden />
+                Undo this turn
+              </button>
+            ) : null}
           </div>
           <div className="code-files-chips">
             {item.paths.map((path) => (

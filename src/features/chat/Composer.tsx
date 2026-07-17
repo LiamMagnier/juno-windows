@@ -22,6 +22,7 @@ import {
   Loader2,
   Lock,
   LockOpen,
+  Mic,
   Paperclip,
   Sparkles,
   Square,
@@ -34,6 +35,8 @@ import { sendMessage, stopGeneration, type SendOptions } from "@/lib/chat/chatEn
 import { enqueueMutation } from "@/lib/data/mutationQueue";
 import { useDataStore } from "@/state/dataStore";
 import { emptyThread, useThreadStore, type GenerationStatus } from "@/state/threadStore";
+import { useVoiceStore } from "@/state/voiceStore";
+import { VoicePanel } from "@/features/voice/VoicePanel";
 import {
   consumePendingProjectId,
   peekPendingProjectId,
@@ -93,6 +96,8 @@ export function Composer({
   );
   const followUps = useThreadStore((s) => s.threads[threadKey]?.followUps);
   const setPrivateMode = useThreadStore((s) => s.setPrivateMode);
+  const voicePhase = useVoiceStore((s) => s.phase);
+  const startVoice = useVoiceStore((s) => s.start);
 
   const prefs = useChatPrefs();
   const model = models.find((m) => m.id === modelId) ?? null;
@@ -405,6 +410,8 @@ export function Composer({
         </div>
       ) : null}
 
+      <VoicePanel />
+
       <div className="chat-composer" data-private={privateMode || undefined}>
         {dragging && !privateMode ? (
           <div className="chat-drop-overlay" aria-hidden>
@@ -670,6 +677,23 @@ export function Composer({
           </button>
 
           <div className="chat-controls-spacer" />
+
+          {!privateMode ? (
+            <button
+              type="button"
+              className="chat-control-toggle"
+              aria-label="Start voice conversation"
+              title={
+                voicePhase !== "idle"
+                  ? "A voice session is already running"
+                  : "Start voice conversation"
+              }
+              disabled={busy || voicePhase !== "idle"}
+              onClick={() => void startVoice(conversationId)}
+            >
+              <Mic size={15} aria-hidden />
+            </button>
+          ) : null}
 
           {busy ? (
             <button
