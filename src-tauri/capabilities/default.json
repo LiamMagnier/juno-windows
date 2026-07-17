@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Baseline capability for the main Juno window. The privileged surface is the explicit juno:* command set plus narrowly-scoped plugin permissions — no fs, shell, or http plugin access from the webview.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized",
+    "core:window:allow-set-title",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "deep-link:default",
+    "dialog:allow-open",
+    "process:allow-restart",
+    "updater:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        { "url": "https://**" },
+        { "url": "http://localhost:*" },
+        { "url": "http://127.0.0.1:*" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "juno-windows",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Juno for Windows — native Tauri 2 desktop client of the Juno backend",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-deep-link": "^2.4.9",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,7 @@
+/* Juno design tokens — Windows adaptation. Populated fully in the design-system milestone. */
+:root {
+  color-scheme: dark;
+  --bg-app: #131315;
+  --fg-primary: #ececec;
+  --accent: #c96f4a;
+}
