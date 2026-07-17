@@ -1,0 +1,133 @@
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: hsl(var(--background) / 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dialog-scrim-in var(--dur-fast) var(--ease-out-soft);
+}
+
+@keyframes dialog-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.dialog-panel {
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--hairline-strong));
+  border-radius: var(--radius-float);
+  box-shadow: var(--shadow-float);
+  padding: 20px;
+  gap: 14px;
+  animation: dialog-panel-in var(--dur-base) var(--ease-out-expo);
+}
+
+@keyframes dialog-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.dialog-title {
+  font-family: var(--font-display);
+  font-size: var(--text-subtitle);
+  font-weight: 600;
+}
+
+.dialog-body {
+  overflow-y: auto;
+  min-height: 0;
+  font-size: var(--text-body);
+  color: hsl(var(--foreground));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Shared button idioms for dialogs and panels. */
+.btn {
+  padding: 7px 16px;
+  border-radius: var(--radius-control);
+  font-size: var(--text-body);
+  font-weight: 600;
+  transition: background var(--dur-fast) var(--ease-out-soft);
+}
+
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.btn-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 1px solid hsl(var(--hairline));
+}
+
+.btn-secondary:hover {
+  background: hsl(var(--hover-fill));
+}
+
+.btn-destructive {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.btn-destructive:hover {
+  filter: brightness(1.08);
+}
+
+/* Shared form field idioms. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+
+.field input,
+.field textarea,
+.field select {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--input-border));
+  border-radius: var(--radius-control);
+  padding: 7px 10px;
+  font-size: var(--text-body);
+  box-shadow: var(--well-inset);
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible,
+.field select:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 0;
+}

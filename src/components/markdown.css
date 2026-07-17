@@ -1,0 +1,121 @@
+.markdown {
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+.markdown > *:first-child {
+  margin-top: 0;
+}
+
+.markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote {
+  margin: 0 0 0.75em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 1.2em 0 0.5em;
+  line-height: 1.3;
+}
+
+.markdown h1 {
+  font-size: 1.5em;
+}
+
+.markdown h2 {
+  font-size: 1.3em;
+}
+
+.markdown h3 {
+  font-size: 1.15em;
+}
+
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+.markdown .md-code {
+  position: relative;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 0.75em;
+}
+
+.markdown .md-code::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+  text-transform: lowercase;
+}
+
+.markdown .md-code code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+}
+
+.markdown blockquote {
+  border-inline-start: 3px solid hsl(var(--primary) / 0.4);
+  padding-inline-start: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.markdown table {
+  border-collapse: collapse;
+  margin: 0 0 0.75em;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid hsl(var(--hairline-strong));
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.markdown th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.markdown img {
+  max-width: 100%;
+  border-radius: var(--radius-card);
+}
+
+.markdown a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.4);
+}
+
+.markdown hr {
+  border: none;
+  border-top: 1px solid hsl(var(--hairline-strong));
+  margin: 1em 0;
+}

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useUiStore, SIDEBAR_COMPACT } from "@/state/uiStore";
+import { useThreadStore } from "@/state/threadStore";
+import { startSync, stopSync } from "@/lib/data/syncEngine";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import { MainPane } from "@/features/main/MainPane";
+import { SettingsDialog } from "@/features/settings/SettingsDialog";
+import { ContextMenuProvider } from "@/components/ContextMenu";
 import "./shell.css";
 
 /**
@@ -16,6 +20,11 @@ export function Shell() {
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
 
   useEffect(() => {
+    void startSync();
+    return () => stopSync();
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && !e.shiftKey && !e.altKey) {
         if (e.key === "1") {
@@ -27,6 +36,13 @@ export function Shell() {
         } else if (e.key.toLowerCase() === "b") {
           e.preventDefault();
           toggleSidebar();
+        } else if (e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          useUiStore.getState().setView({ kind: "chat" });
+          useThreadStore.getState().setActive(null);
+        } else if (e.key === ",") {
+          e.preventDefault();
+          useUiStore.getState().openSettings(true);
         }
       }
       if (e.key === "F6") {
@@ -63,6 +79,7 @@ export function Shell() {
   const width = sidebarCollapsed ? SIDEBAR_COMPACT : sidebarWidth;
 
   return (
+    <ContextMenuProvider>
     <div className="shell" ref={shellRef}>
       <nav
         className="shell-sidebar"
@@ -89,7 +106,9 @@ export function Shell() {
       <main className="shell-main" aria-label={mode === "chat" ? "Chat" : "Code"}>
         <MainPane mode={mode} />
       </main>
+      <SettingsDialog />
     </div>
+    </ContextMenuProvider>
   );
 }
 
