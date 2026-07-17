@@ -14,6 +14,24 @@ pub struct UploadResponse {
 }
 
 const MAX_UPLOAD_BYTES: u64 = 1024 * 1024 * 1024; // matches the server's largest plan cap
+const MAX_QUICK_UPLOAD_BYTES: u64 = 25 * 1024 * 1024;
+
+fn validate_upload_target(value: Option<&str>) -> Result<(), CommandError> {
+    if value.is_some_and(|id| {
+        id.is_empty()
+            || id.len() > 128
+            || !id
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'))
+    }) {
+        Err(CommandError::new(
+            "invalid_upload_target",
+            "That upload target is invalid.",
+        ))
+    } else {
+        Ok(())
+    }
+}
 
 async fn do_upload(
     app: &tauri::AppHandle,
@@ -56,12 +74,21 @@ async fn do_upload(
 
 #[tauri::command]
 pub async fn api_upload_path(
+    window: tauri::WebviewWindow,
     app: tauri::AppHandle,
     state: tauri::State<'_, NetState>,
     path: String,
     conversation_id: Option<String>,
     project_id: Option<String>,
 ) -> Result<UploadResponse, CommandError> {
+    validate_upload_target(conversation_id.as_deref())?;
+    validate_upload_target(project_id.as_deref())?;
+    if window.label() != "main" {
+        return Err(CommandError::new(
+            "forbidden_path_upload",
+            "Juno Quick cannot read files by local path.",
+        ));
+    }
     let path_buf = std::path::PathBuf::from(&path);
     let metadata = tokio::fs::metadata(&path_buf)
         .await
@@ -102,7 +129,9 @@ pub async fn api_upload_path(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // Tauri IPC commands require a flat argument signature.
 pub async fn api_upload_bytes(
+    window: tauri::WebviewWindow,
     app: tauri::AppHandle,
     state: tauri::State<'_, NetState>,
     file_name: String,
@@ -111,6 +140,42 @@ pub async fn api_upload_bytes(
     conversation_id: Option<String>,
     project_id: Option<String>,
 ) -> Result<UploadResponse, CommandError> {
+    validate_upload_target(conversation_id.as_deref())?;
+    validate_upload_target(project_id.as_deref())?;
+    if window.label() != "main" && window.label() != "quick" {
+        return Err(CommandError::new(
+            "forbidden_window",
+            "Uploads are not available from this window.",
+        ));
+    }
+    if window.label() == "quick" && bytes.len() as u64 > MAX_QUICK_UPLOAD_BYTES {
+        return Err(CommandError::new(
+            "file_too_large",
+            "Quick uploads are limited to 25 MB. Open Juno for larger files.",
+        ));
+    }
+    if window.label() == "quick" {
+        if file_name.is_empty()
+            || file_name.len() > 160
+            || file_name.contains(['/', '\\'])
+            || file_name.chars().any(char::is_control)
+        {
+            return Err(CommandError::new(
+                "invalid_file_name",
+                "That attachment has an invalid file name.",
+            ));
+        }
+        if mime_type.is_empty()
+            || mime_type.len() > 100
+            || mime_type.chars().any(char::is_control)
+            || !quick_mime_allowed(&mime_type)
+        {
+            return Err(CommandError::new(
+                "unsupported_file_type",
+                "Juno Quick supports images, PDF, text, and code files.",
+            ));
+        }
+    }
     if bytes.len() as u64 > MAX_UPLOAD_BYTES {
         return Err(CommandError::new(
             "file_too_large",
@@ -127,4 +192,43 @@ pub async fn api_upload_bytes(
         project_id,
     )
     .await
+}
+
+fn quick_mime_allowed(mime: &str) -> bool {
+    matches!(
+        mime,
+        "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf"
+            | "application/json"
+            | "application/javascript"
+            | "application/xml"
+            | "application/x-yaml"
+    ) || (mime.starts_with("text/")
+        && !matches!(mime, "text/html" | "text/xml-external-parsed-entity"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{quick_mime_allowed, validate_upload_target};
+
+    #[test]
+    fn quick_upload_mime_allowlist_blocks_active_content() {
+        assert!(quick_mime_allowed("image/png"));
+        assert!(quick_mime_allowed("application/pdf"));
+        assert!(quick_mime_allowed("text/markdown"));
+        assert!(!quick_mime_allowed("text/html"));
+        assert!(!quick_mime_allowed("image/svg+xml"));
+        assert!(!quick_mime_allowed("application/octet-stream"));
+    }
+
+    #[test]
+    fn upload_targets_are_bounded_and_log_safe() {
+        assert!(validate_upload_target(Some("clx-123_abc")).is_ok());
+        assert!(validate_upload_target(None).is_ok());
+        assert!(validate_upload_target(Some("../other-account")).is_err());
+        assert!(validate_upload_target(Some(&"x".repeat(129))).is_err());
+    }
 }

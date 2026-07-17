@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-api-stream"
+description = "Enables the api_stream command without any pre-configured scope."
+commands.allow = ["api_stream"]
+
+[[permission]]
+identifier = "deny-api-stream"
+description = "Denies the api_stream command without any pre-configured scope."
+commands.deny = ["api_stream"]

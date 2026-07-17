@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-workspace-set-mode"
+description = "Enables the workspace_set_mode command without any pre-configured scope."
+commands.allow = ["workspace_set_mode"]
+
+[[permission]]
+identifier = "deny-workspace-set-mode"
+description = "Denies the workspace_set_mode command without any pre-configured scope."
+commands.deny = ["workspace_set_mode"]

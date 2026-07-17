@@ -312,6 +312,9 @@ export type StreamChunk =
       quota?: ClientQuota;
       finishReason?: ChatFinishReason;
       preservePartial?: boolean;
+      generationId?: string;
+      receiptState?: "failed";
+      failureCode?: string;
     }
   | { type: "ping" };
 

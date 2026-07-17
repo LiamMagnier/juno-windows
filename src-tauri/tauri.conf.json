@@ -24,6 +24,28 @@
         "transparent": true,
         "visible": false,
         "dragDropEnabled": true
+      },
+      {
+        "title": "Juno Quick",
+        "label": "quick",
+        "url": "index.html?surface=quick",
+        "width": 680,
+        "height": 188,
+        "minWidth": 520,
+        "minHeight": 140,
+        "maxWidth": 760,
+        "maxHeight": 440,
+        "decorations": false,
+        "shadow": true,
+        "transparent": true,
+        "visible": false,
+        "focus": false,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "skipTaskbar": true,
+        "alwaysOnTop": true,
+        "dragDropEnabled": false
       }
     ],
     "security": {

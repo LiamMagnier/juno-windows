@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-quick-quit"
+description = "Enables the quick_quit command without any pre-configured scope."
+commands.allow = ["quick_quit"]
+
+[[permission]]
+identifier = "deny-quick-quit"
+description = "Denies the quick_quit command without any pre-configured scope."
+commands.deny = ["quick_quit"]

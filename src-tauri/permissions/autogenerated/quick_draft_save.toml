@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-quick-draft-save"
+description = "Enables the quick_draft_save command without any pre-configured scope."
+commands.allow = ["quick_draft_save"]
+
+[[permission]]
+identifier = "deny-quick-draft-save"
+description = "Denies the quick_draft_save command without any pre-configured scope."
+commands.deny = ["quick_draft_save"]

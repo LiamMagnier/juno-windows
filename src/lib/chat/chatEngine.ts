@@ -18,6 +18,13 @@ import type {
 } from "../data/entities";
 import { useDataStore } from "@/state/dataStore";
 import { applyQuota, emptyThread, useThreadStore } from "@/state/threadStore";
+import type { PreflightClarificationContext } from "./clarification";
+import {
+  durableReceiptFailureMessage,
+  durableReceiptPath,
+  parseDurableReceipt,
+  type DurableReceiptStatus,
+} from "./receipt";
 
 export interface SendOptions {
   conversationId: string | null; // null = new conversation
@@ -36,11 +43,20 @@ export interface SendOptions {
   privateMode?: boolean;
   privateHistory?: Array<{ role: "USER" | "ASSISTANT"; content: string }>;
   regenerate?: boolean;
+  /** Pre-answer clarification context persisted with the first user turn. */
+  preflightClarification?: PreflightClarificationContext;
+  /** Durable creation metadata for Juno Quick's first saved submission. */
+  origin?: "quick_windows";
+  clientRequestId?: string;
+  clientMessageId?: string;
 }
 
 interface ActiveGeneration {
   generationId: string;
   conversationId: string;
+  clientRequestId: string | null;
+  optimisticUserMessageId: string | null;
+  assistantMessageId: string;
   controller: AbortController;
   sequence: number;
   sawMeta: boolean;
@@ -48,6 +64,11 @@ interface ActiveGeneration {
   /** ids of assistant rows we removed locally for regenerate: id -> createdAt */
   removedIds: Map<string, string>;
   done: boolean;
+  stopRequested: boolean;
+  serverCancelConfirmed: boolean;
+  recovering: boolean;
+  recoveryPromise: Promise<void> | null;
+  options: SendOptions;
 }
 
 const PRIVATE_ID = "private";
@@ -74,10 +95,21 @@ export function isGenerating(conversationId: string): boolean {
 /** Emergency stop for a conversation's generation. */
 export async function stopGeneration(conversationId: string): Promise<void> {
   const gen = active.get(conversationId);
-  if (!gen) return;
+  if (!gen || gen.stopRequested) return;
+  gen.stopRequested = true;
   const store = useThreadStore.getState();
   store.patchThread(conversationId, { status: "stopping" });
 
+  // Durable Quick generations use a server-generated generation id. Recovery
+  // resolves it from the account-scoped receipt even when Stop wins the race
+  // against the first meta frame, then keeps polling until terminal truth.
+  if (gen.clientRequestId) {
+    scheduleDroppedRecovery(null, gen);
+    gen.controller.abort();
+    return;
+  }
+
+  // Legacy/main generations own the id they sent and can cancel immediately.
   // Arm a fallback: if the server doesn't wrap up in 5s, abort locally.
   const fallback = setTimeout(() => {
     if (!gen.done) {
@@ -107,7 +139,7 @@ export async function stopGeneration(conversationId: string): Promise<void> {
 function finalizeLocalStop(conversationId: string, gen: ActiveGeneration): void {
   if (gen.done) return;
   gen.done = true;
-  active.delete(conversationId);
+  if (active.get(conversationId) === gen) active.delete(conversationId);
   const store = useThreadStore.getState();
   store.updateMessages(conversationId, (messages) =>
     messages.map((m) =>
@@ -182,12 +214,20 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
   const gen: ActiveGeneration = {
     generationId,
     conversationId: key,
+    clientRequestId: options.clientRequestId ?? null,
+    optimisticUserMessageId: userRow?.id ?? null,
+    assistantMessageId: assistantRow.id,
     controller,
     sequence,
     sawMeta: false,
     userMessageId: null,
     removedIds,
     done: false,
+    stopRequested: false,
+    serverCancelConfirmed: false,
+    recovering: false,
+    recoveryPromise: null,
+    options,
   };
   active.set(key, gen);
 
@@ -214,8 +254,23 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
     body.privateMode = true;
     body.privateHistory = options.privateHistory ?? [];
   }
+  if (options.preflightClarification) {
+    body.preflightClarification = options.preflightClarification;
+  }
+  if (
+    !privateMode &&
+    !options.conversationId &&
+    options.origin === "quick_windows" &&
+    options.clientRequestId &&
+    options.clientMessageId
+  ) {
+    body.origin = options.origin;
+    body.clientRequestId = options.clientRequestId;
+    body.clientMessageId = options.clientMessageId;
+  }
 
   let resolvedConversationId: string | null = options.conversationId;
+  let recoveryScheduled = false;
 
   try {
     const res = await apiStream("/chat", body, controller.signal);
@@ -230,6 +285,7 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
         case "meta": {
           gen.sawMeta = true;
           gen.userMessageId = chunk.userMessageId;
+          if (chunk.generationId) gen.generationId = chunk.generationId;
           if (!privateMode && chunk.conversationId !== PRIVATE_ID) {
             resolvedConversationId = chunk.conversationId;
             if (key === "new") {
@@ -333,6 +389,7 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
         case "error": {
           sawTerminal = true;
           gen.done = true;
+          if (chunk.generationId) gen.generationId = chunk.generationId;
           const store = useThreadStore.getState();
           store.updateMessages(gen.conversationId, (messages) =>
             messages.map((m) => {
@@ -362,14 +419,90 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
       // polling the thread (persisted chats only).
       if (!privateMode && resolvedConversationId && gen.sawMeta) {
         markInterrupted(gen.conversationId);
-        void recoverDroppedGeneration(resolvedConversationId, gen);
+        recoveryScheduled = true;
+        scheduleDroppedRecovery(resolvedConversationId, gen);
       } else {
         finalizeLocalStop(gen.conversationId, gen);
       }
     }
   } catch (err) {
-    if (!gen.done) {
-      gen.done = true;
+    if (
+      !gen.done &&
+      err instanceof BackendError &&
+      err.status === 409 &&
+      err.code === "REQUEST_ALREADY_SUBMITTED" &&
+      typeof err.details?.conversationId === "string"
+    ) {
+      // The backend already accepted this stable Quick request. Adopt its
+      // canonical conversation instead of showing a false failure or sending
+      // a duplicate first turn.
+      const canonicalId = err.details.conversationId;
+      resolvedConversationId = canonicalId;
+      gen.sawMeta = true;
+      gen.userMessageId =
+        typeof err.details.userMessageId === "string" ? err.details.userMessageId : null;
+      if (typeof err.details.generationId === "string") {
+        gen.generationId = err.details.generationId;
+      }
+      if (key === "new") migrateThread("new", canonicalId, gen);
+      upsertConversationStub(canonicalId, "New conversation", options);
+      if (err.details.receiptState === "failed") {
+        gen.done = true;
+        const failureMessage = durableReceiptFailureMessage({
+          conversationId: canonicalId,
+          userMessageId: gen.userMessageId ?? "unknown-message",
+          generationId: gen.generationId,
+          receiptState: "failed",
+          finishReason: (typeof err.details.finishReason === "string"
+            ? err.details.finishReason
+            : "error") as ChatFinishReason,
+          failureCode: typeof err.details.failureCode === "string" ? err.details.failureCode : null,
+        });
+        useThreadStore.getState().updateMessages(canonicalId, (messages) =>
+          messages.map((message) =>
+            isStreamingRow(message)
+              ? {
+                  ...stripStreaming(message),
+                  content: message.content || failureMessage,
+                  errorMessage: failureMessage,
+                  finishReason: (typeof err.details?.finishReason === "string"
+                    ? err.details.finishReason
+                    : "error") as ChatFinishReason,
+                }
+              : message,
+          ),
+        );
+        useThreadStore.getState().patchThread(canonicalId, { status: "idle" });
+      } else {
+        markInterrupted(canonicalId);
+        // The accepted generation may still be running. Keep the assistant
+        // row recoverable and poll from the canonical user-message anchor.
+        recoveryScheduled = true;
+        scheduleDroppedRecovery(canonicalId, gen);
+      }
+    } else if (
+      !gen.done &&
+      err instanceof DOMException &&
+      err.name === "AbortError" &&
+      gen.clientRequestId &&
+      gen.recovering
+    ) {
+      // Durable Stop/drop recovery owns terminalization. Do not manufacture a
+      // local user_stopped result before the canonical receipt is known.
+      recoveryScheduled = true;
+    } else if (
+      !gen.done &&
+      gen.clientRequestId &&
+      err instanceof BackendError &&
+      (err.status === 0 || err.status >= 500 || err.code === "REQUEST_IN_PROGRESS")
+    ) {
+      // The transport can fail after the backend has committed acceptance but
+      // before the first SSE meta frame reaches this process. The stable key is
+      // the only safe authority in that window.
+      markInterrupted(gen.conversationId);
+      recoveryScheduled = true;
+      scheduleDroppedRecovery(null, gen);
+    } else if (!gen.done) {
       const store = useThreadStore.getState();
       const message =
         err instanceof BackendError
@@ -380,6 +513,7 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
       if (message === null) {
         finalizeLocalStop(gen.conversationId, gen);
       } else {
+        gen.done = true;
         store.updateMessages(gen.conversationId, (messages) =>
           messages.map((m) =>
             isStreamingRow(m)
@@ -398,10 +532,12 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
       }
     }
   } finally {
-    if (active.get(gen.conversationId) === gen) active.delete(gen.conversationId);
-    const store = useThreadStore.getState();
-    if (store.threads[gen.conversationId]?.status !== "idle") {
-      store.patchThread(gen.conversationId, { status: "idle" });
+    if (!recoveryScheduled && !gen.recovering) {
+      if (active.get(gen.conversationId) === gen) active.delete(gen.conversationId);
+      const store = useThreadStore.getState();
+      if (store.threads[gen.conversationId]?.status !== "idle") {
+        store.patchThread(gen.conversationId, { status: "idle" });
+      }
     }
   }
 
@@ -422,6 +558,8 @@ function migrateThread(fromKey: string, toKey: string, gen: ActiveGeneration): v
   }
   active.delete(fromKey);
   active.set(toKey, gen);
+  latestSequence.delete(fromKey);
+  latestSequence.set(toKey, gen.sequence);
   gen.conversationId = toKey;
 }
 
@@ -465,49 +603,200 @@ function markInterrupted(conversationId: string): void {
   );
 }
 
-async function recoverDroppedGeneration(
+function scheduleDroppedRecovery(conversationId: string | null, gen: ActiveGeneration): void {
+  if (gen.recoveryPromise) return;
+  gen.recovering = true;
+  gen.recoveryPromise = recoverDroppedGeneration(conversationId, gen).finally(() => {
+    gen.recovering = false;
+    gen.recoveryPromise = null;
+  });
+  void gen.recoveryPromise;
+}
+
+async function fetchDurableReceipt(gen: ActiveGeneration): Promise<DurableReceiptStatus> {
+  const selector = gen.clientRequestId
+    ? { clientRequestId: gen.clientRequestId }
+    : { generationId: gen.generationId };
+  const raw = await api<unknown>(durableReceiptPath(selector));
+  const receipt = parseDurableReceipt(raw);
+  if (!receipt) {
+    throw new BackendError(0, "invalid_receipt", "Juno returned an invalid generation receipt.", true);
+  }
+  return receipt;
+}
+
+function adoptDurableReceipt(gen: ActiveGeneration, receipt: DurableReceiptStatus): boolean {
+  const previousKey = gen.conversationId;
+  if (previousKey !== "new" && previousKey !== receipt.conversationId) return false;
+  gen.generationId = receipt.generationId;
+  gen.userMessageId = receipt.userMessageId;
+  gen.sawMeta = true;
+  if (previousKey === "new") migrateThread("new", receipt.conversationId, gen);
+  upsertConversationStub(receipt.conversationId, "New conversation", gen.options);
+  if (gen.optimisticUserMessageId) {
+    useThreadStore.getState().updateMessages(gen.conversationId, (messages) =>
+      messages.map((message) =>
+        message.id === gen.optimisticUserMessageId
+          ? { ...message, id: receipt.userMessageId }
+          : message,
+      ),
+    );
+    gen.optimisticUserMessageId = null;
+  }
+  return true;
+}
+
+function finishReceiptFailure(gen: ActiveGeneration, receipt: DurableReceiptStatus): void {
+  if (gen.done) return;
+  gen.done = true;
+  const message = durableReceiptFailureMessage(receipt);
+  const conversationId = gen.conversationId;
+  const store = useThreadStore.getState();
+  store.updateMessages(conversationId, (messages) =>
+    messages.map((row) =>
+      row.id === gen.assistantMessageId || isStreamingRow(row)
+        ? {
+            ...stripStreaming(row),
+            content: row.content || message,
+            errorMessage: message,
+            finishReason: receipt.finishReason ?? "error",
+          }
+        : row,
+    ),
+  );
+  store.patchThread(conversationId, { status: "idle" });
+  if (active.get(conversationId) === gen) active.delete(conversationId);
+}
+
+function finishUnconfirmedRecovery(gen: ActiveGeneration): void {
+  if (gen.done) return;
+  gen.done = true;
+  const message = gen.stopRequested
+    ? "Juno could not confirm that the response stopped. Reconnect and retry this turn safely."
+    : "Juno could not confirm how the interrupted response ended. Reconnect and retry this turn.";
+  const conversationId = gen.conversationId;
+  const store = useThreadStore.getState();
+  store.updateMessages(conversationId, (messages) =>
+    messages.map((row) =>
+      row.id === gen.assistantMessageId || isStreamingRow(row)
+        ? {
+            ...stripStreaming(row),
+            content: row.content || message,
+            errorMessage: message,
+            finishReason: "network_error" as ChatFinishReason,
+          }
+        : row,
+    ),
+  );
+  store.patchThread(conversationId, { status: "idle" });
+  if (active.get(conversationId) === gen) active.delete(conversationId);
+}
+
+async function recoverConversationResult(
   conversationId: string,
+  gen: ActiveGeneration,
+): Promise<boolean> {
+  const data = await api<{ messages: ClientMessage[]; artifacts: ClientArtifact[] }>(
+    `/conversations/${encodeURIComponent(conversationId)}`,
+  );
+  const anchorIndex = gen.userMessageId
+    ? data.messages.findIndex((message) => message.id === gen.userMessageId)
+    : -1;
+  const candidates = data.messages.slice(anchorIndex + 1);
+  const store = useThreadStore.getState();
+  const knownIds = new Set(
+    (store.threads[conversationId]?.messages ?? []).map((message) => message.id),
+  );
+  const recovered = candidates.find((message) => {
+    if (message.role !== "ASSISTANT") return false;
+    const removedCreatedAt = gen.removedIds.get(message.id);
+    if (removedCreatedAt !== undefined) return message.createdAt !== removedCreatedAt;
+    return !knownIds.has(message.id);
+  });
+  if (!recovered) return false;
+  gen.done = true;
+  store.updateMessages(conversationId, (messages) =>
+    messages.map((message) =>
+      message.id === gen.assistantMessageId || isStreamingRow(message) ? recovered : message,
+    ),
+  );
+  store.mergeArtifacts(conversationId, data.artifacts);
+  store.patchThread(conversationId, { status: "idle" });
+  if (active.get(conversationId) === gen) active.delete(conversationId);
+  return true;
+}
+
+async function recoverDroppedGeneration(
+  initialConversationId: string | null,
   gen: ActiveGeneration,
 ): Promise<void> {
   const startedAt = Date.now();
   let attempt = 0;
-  while (Date.now() - startedAt < RECOVERY_WINDOW_MS) {
-    if (latestSequence.get(gen.conversationId) !== gen.sequence) return; // superseded in THIS conversation
-    await new Promise((r) => setTimeout(r, attempt < 8 ? 5_000 : 15_000));
-    attempt++;
-    try {
-      const data = await api<{ messages: ClientMessage[]; artifacts: ClientArtifact[] }>(
-        `/conversations/${encodeURIComponent(conversationId)}`,
-      );
-      const anchorIndex = gen.userMessageId
-        ? data.messages.findIndex((m) => m.id === gen.userMessageId)
-        : -1;
-      const candidates = data.messages.slice(anchorIndex + 1);
-      const store = useThreadStore.getState();
-      const knownIds = new Set(
-        (store.threads[conversationId]?.messages ?? []).map((m) => m.id),
-      );
-      const recovered = candidates.find((m) => {
-        if (m.role !== "ASSISTANT") return false;
-        const removedCreatedAt = gen.removedIds.get(m.id);
-        if (removedCreatedAt !== undefined) return m.createdAt !== removedCreatedAt;
-        return !knownIds.has(m.id);
-      });
-      if (recovered) {
+  let conversationId = initialConversationId;
+  try {
+    while (Date.now() - startedAt < RECOVERY_WINDOW_MS) {
+      if (gen.done || latestSequence.get(gen.conversationId) !== gen.sequence) return;
+
+      let receipt: DurableReceiptStatus | null = null;
+      if (gen.clientRequestId) {
+        try {
+          receipt = await fetchDurableReceipt(gen);
+          if (!adoptDurableReceipt(gen, receipt)) {
+            finishUnconfirmedRecovery(gen);
+            return;
+          }
+          conversationId = receipt.conversationId;
+          if (receipt.receiptState === "failed") {
+            finishReceiptFailure(gen, receipt);
+            return;
+          }
+          if (gen.stopRequested && !gen.serverCancelConfirmed) {
+            try {
+              const cancellation = await api<{ ok: boolean; cancelled: boolean }>("/chat/cancel", {
+                method: "POST",
+                body: { generationId: receipt.generationId },
+              });
+              gen.serverCancelConfirmed = cancellation.cancelled;
+            } catch {
+              // The receipt loop retries; never claim user_stopped without a
+              // canonical cancellation or terminal receipt.
+            }
+          }
+        } catch {
+          // A 404 can race acceptance and network failures are recoverable.
+        }
+      }
+
+      if (conversationId) {
+        try {
+          if (await recoverConversationResult(conversationId, gen)) return;
+        } catch {
+          // Keep checking the account-scoped receipt and canonical thread.
+        }
+      }
+
+      if (receipt?.receiptState === "completed") {
+        // Completion is authoritative even if the conversation refresh raced
+        // replication. End the spinner and immediately reload the full thread.
         gen.done = true;
-        active.delete(conversationId);
-        store.updateMessages(conversationId, (messages) =>
-          messages.map((m) => (isStreamingRow(m) ? recovered : m)),
-        );
-        store.mergeArtifacts(conversationId, data.artifacts);
-        store.patchThread(conversationId, { status: "idle" });
+        const store = useThreadStore.getState();
+        store.patchThread(gen.conversationId, { status: "idle" });
+        if (active.get(gen.conversationId) === gen) active.delete(gen.conversationId);
+        void store.openThread(gen.conversationId);
         return;
       }
-    } catch {
-      // keep polling
+
+      const delay = gen.stopRequested ? 500 : attempt < 8 ? 5_000 : 15_000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      attempt++;
+    }
+    finishUnconfirmedRecovery(gen);
+  } finally {
+    if (gen.done && active.get(gen.conversationId) === gen) active.delete(gen.conversationId);
+    if (gen.done && useThreadStore.getState().threads[gen.conversationId]?.status !== "idle") {
+      useThreadStore.getState().patchThread(gen.conversationId, { status: "idle" });
     }
   }
-  finalizeLocalStop(conversationId, gen);
 }
 
 /** Edit a user message, truncate the branch, regenerate. */

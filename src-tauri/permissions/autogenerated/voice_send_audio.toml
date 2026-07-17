@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-voice-send-audio"
+description = "Enables the voice_send_audio command without any pre-configured scope."
+commands.allow = ["voice_send_audio"]
+
+[[permission]]
+identifier = "deny-voice-send-audio"
+description = "Denies the voice_send_audio command without any pre-configured scope."
+commands.deny = ["voice_send_audio"]

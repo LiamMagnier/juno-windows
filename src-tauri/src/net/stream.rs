@@ -3,7 +3,7 @@
 //! aborts the underlying connection immediately (the emergency Stop path).
 
 use super::auth::access_token;
-use super::NetState;
+use super::{ActiveStream, NetState};
 use crate::error::CommandError;
 use futures_util::StreamExt;
 use serde::Serialize;
@@ -38,6 +38,7 @@ pub struct StreamHandle {
 
 #[tauri::command]
 pub async fn api_stream(
+    window: tauri::WebviewWindow,
     app: tauri::AppHandle,
     state: tauri::State<'_, NetState>,
     path: String,
@@ -45,6 +46,18 @@ pub async fn api_stream(
     on_event: Channel<StreamEvent>,
 ) -> Result<StreamHandle, CommandError> {
     super::validate_api_path(&path).map_err(|e| CommandError::new("invalid_path", e))?;
+    if window.label() == "quick" && path != "/chat" {
+        return Err(CommandError::new(
+            "forbidden_api",
+            "This stream is not available from Juno Quick.",
+        ));
+    }
+    if window.label() == "quick" && body_json.len() > 2 * 1024 * 1024 {
+        return Err(CommandError::new(
+            "request_too_large",
+            "That Juno Quick conversation is too large to send.",
+        ));
+    }
 
     let stream_id = {
         let mut next = state.next_stream_id.lock().unwrap();
@@ -53,11 +66,13 @@ pub async fn api_stream(
         id
     };
     let cancel = CancellationToken::new();
-    state
-        .streams
-        .lock()
-        .unwrap()
-        .insert(stream_id, cancel.clone());
+    state.streams.lock().unwrap().insert(
+        stream_id,
+        ActiveStream {
+            cancel: cancel.clone(),
+            owner: window.label().to_string(),
+        },
+    );
 
     let url = state.api_url(&path);
     let client = state.client.clone();
@@ -164,8 +179,23 @@ async fn run_stream(
 /// nothing (generation is detached server-side) — callers pair this with
 /// POST /api/chat/cancel.
 #[tauri::command]
-pub fn api_stream_cancel(state: tauri::State<'_, NetState>, stream_id: u64) {
-    if let Some(token) = state.streams.lock().unwrap().remove(&stream_id) {
-        token.cancel();
+pub fn api_stream_cancel(
+    window: tauri::WebviewWindow,
+    state: tauri::State<'_, NetState>,
+    stream_id: u64,
+) -> Result<(), CommandError> {
+    let mut streams = state.streams.lock().unwrap();
+    if streams
+        .get(&stream_id)
+        .is_some_and(|stream| stream.owner != window.label())
+    {
+        return Err(CommandError::new(
+            "forbidden_stream",
+            "That stream belongs to another window.",
+        ));
     }
+    if let Some(stream) = streams.remove(&stream_id) {
+        stream.cancel.cancel();
+    }
+    Ok(())
 }

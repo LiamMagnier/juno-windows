@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ws-restore-to-before"
+description = "Enables the ws_restore_to_before command without any pre-configured scope."
+commands.allow = ["ws_restore_to_before"]
+
+[[permission]]
+identifier = "deny-ws-restore-to-before"
+description = "Denies the ws_restore_to_before command without any pre-configured scope."
+commands.deny = ["ws_restore_to_before"]

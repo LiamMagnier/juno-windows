@@ -1,0 +1,27 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "quick",
+  "description": "Least-privilege capability for the Juno Quick overlay. It can use the authenticated chat transport and in-memory uploads, but cannot read local paths or access Code, workspaces, PTYs, Git, shell, filesystem, secrets, or account mutations.",
+  "windows": ["quick"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "allow-set-window-material",
+    "allow-auth-has-session",
+    "allow-api-request",
+    "allow-api-stream",
+    "allow-api-stream-cancel",
+    "allow-api-upload-bytes",
+    "allow-quick-get-settings",
+    "allow-quick-hide",
+    "allow-quick-open-main",
+    "allow-quick-draft-load",
+    "allow-quick-draft-save",
+    "allow-quick-draft-clear",
+    "allow-quick-set-runtime-state",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://**" }]
+    }
+  ]
+}

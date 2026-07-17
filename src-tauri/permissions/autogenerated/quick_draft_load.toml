@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-quick-draft-load"
+description = "Enables the quick_draft_load command without any pre-configured scope."
+commands.allow = ["quick_draft_load"]
+
+[[permission]]
+identifier = "deny-quick-draft-load"
+description = "Denies the quick_draft_load command without any pre-configured scope."
+commands.deny = ["quick_draft_load"]

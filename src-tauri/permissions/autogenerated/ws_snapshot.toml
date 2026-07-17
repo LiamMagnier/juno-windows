@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ws-snapshot"
+description = "Enables the ws_snapshot command without any pre-configured scope."
+commands.allow = ["ws_snapshot"]
+
+[[permission]]
+identifier = "deny-ws-snapshot"
+description = "Denies the ws_snapshot command without any pre-configured scope."
+commands.deny = ["ws_snapshot"]

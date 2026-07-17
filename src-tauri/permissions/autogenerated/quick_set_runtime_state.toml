@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-quick-set-runtime-state"
+description = "Enables the quick_set_runtime_state command without any pre-configured scope."
+commands.allow = ["quick_set_runtime_state"]
+
+[[permission]]
+identifier = "deny-quick-set-runtime-state"
+description = "Denies the quick_set_runtime_state command without any pre-configured scope."
+commands.deny = ["quick_set_runtime_state"]

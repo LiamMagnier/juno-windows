@@ -62,6 +62,7 @@ async fn send_once(
 /// rotation + retry.
 #[tauri::command]
 pub async fn api_request(
+    window: tauri::WebviewWindow,
     app: tauri::AppHandle,
     state: tauri::State<'_, NetState>,
     method: String,
@@ -70,6 +71,24 @@ pub async fn api_request(
     timeout_ms: Option<u64>,
 ) -> Result<ApiResponse, CommandError> {
     super::validate_api_path(&path).map_err(|e| CommandError::new("invalid_path", e))?;
+    super::validate_quick_api_access(window.label(), &method, &path)
+        .map_err(|e| CommandError::new("forbidden_api", e))?;
+    if window.label() == "quick" && method == "GET" && body_json.is_some() {
+        return Err(CommandError::new(
+            "invalid_request_body",
+            "Juno Quick GET requests cannot include a body.",
+        ));
+    }
+    if window.label() == "quick"
+        && body_json
+            .as_ref()
+            .is_some_and(|body| body.len() > 256 * 1024)
+    {
+        return Err(CommandError::new(
+            "request_too_large",
+            "That Juno Quick request is too large.",
+        ));
+    }
     let method = method_from(&method)?;
     let timeout = timeout_ms.unwrap_or(30_000).min(300_000);
 
@@ -100,5 +119,19 @@ pub async fn api_request(
         .text()
         .await
         .map_err(|e| CommandError::new("network_error", e.without_url().to_string()))?;
+    if (200..300).contains(&status) && path == "/v1/auth/session" {
+        if let Some(account_id) = serde_json::from_str::<serde_json::Value>(&body)
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("profile")?
+                    .get("id")?
+                    .as_str()
+                    .map(str::to_string)
+            })
+        {
+            crate::quick::bind_authenticated_account(&app, &account_id);
+        }
+    }
     Ok(ApiResponse { status, body })
 }

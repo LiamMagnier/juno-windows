@@ -30,10 +30,23 @@ export function errorFromBody(status: number, body: string): BackendError {
   let retryAfterMs: number | null = null;
   let details: Record<string, unknown> | undefined;
   try {
-    const parsed = JSON.parse(body) as { error?: unknown; code?: string; message?: string };
+    const parsed = JSON.parse(body) as {
+      error?: unknown;
+      code?: string;
+      message?: string;
+      conversationId?: unknown;
+      userMessageId?: unknown;
+      generationId?: unknown;
+      receiptState?: unknown;
+      finishReason?: unknown;
+      failureCode?: unknown;
+      retryable?: unknown;
+      details?: Record<string, unknown>;
+    };
     if (typeof parsed.error === "string") {
       message = parsed.message ?? parsed.error;
       if (parsed.code) code = parsed.code;
+      details = parsed.details;
     } else if (parsed.error && typeof parsed.error === "object") {
       const env = parsed.error as {
         code?: string;
@@ -47,6 +60,17 @@ export function errorFromBody(status: number, body: string): BackendError {
       retryable = env.retryable ?? retryable;
       retryAfterMs = env.retryAfterMs ?? null;
       details = env.details;
+    }
+    if (typeof parsed.code === "string") code = parsed.code;
+    if (typeof parsed.message === "string") message = parsed.message;
+    if (typeof parsed.retryable === "boolean") retryable = parsed.retryable;
+    const idempotencyDetails = Object.fromEntries(
+      ["conversationId", "userMessageId", "generationId", "receiptState", "finishReason", "failureCode"]
+        .map((key) => [key, parsed[key as keyof typeof parsed]])
+        .filter(([, value]) => typeof value === "string" || value === null),
+    );
+    if (Object.keys(idempotencyDetails).length > 0) {
+      details = { ...(details ?? {}), ...idempotencyDetails };
     }
   } catch {
     // non-JSON body

@@ -4,7 +4,7 @@
 //! we re-apply on every theme change. The command reports whether a *native*
 //! backdrop was actually installed: when true the frontend lets the window
 //! material show through its translucent chrome; when false it keeps an opaque
-//! in-app material so the app is never see-through on an OS/þeme that can't do
+//! in-app material so the app is never see-through on an OS/theme that can't do
 //! Mica. That guarantee is why `transparent: true` is safe here.
 
 use tauri::{Manager, Runtime, WebviewWindow};
@@ -54,13 +54,13 @@ fn clear<R: Runtime>(_window: &WebviewWindow<R>) {}
 /// light→dark switch stacks tints.
 #[tauri::command]
 pub fn set_window_material<R: Runtime>(
-    app: tauri::AppHandle<R>,
+    window: WebviewWindow<R>,
     dark: bool,
     enabled: bool,
 ) -> MaterialResult {
-    let Some(window) = app.get_webview_window("main") else {
+    if window.label() != "main" && window.label() != "quick" {
         return MaterialResult { native: false };
-    };
+    }
     clear(&window);
     if !enabled {
         return MaterialResult { native: false };
@@ -72,7 +72,9 @@ pub fn set_window_material<R: Runtime>(
 
 /// Best-effort material at launch so the first paint already has a backdrop.
 pub fn apply_startup<R: Runtime>(app: &tauri::AppHandle<R>, dark: bool) {
-    if let Some(window) = app.get_webview_window("main") {
-        apply(&window, dark);
+    for label in ["main", "quick"] {
+        if let Some(window) = app.get_webview_window(label) {
+            apply(&window, dark);
+        }
     }
 }

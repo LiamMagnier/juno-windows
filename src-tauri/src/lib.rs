@@ -3,6 +3,7 @@ mod error;
 mod host;
 mod material;
 mod net;
+mod quick;
 mod secrets;
 
 use tauri::{Emitter, Manager};
@@ -37,7 +38,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build());
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_denylist(&["quick"])
+                .build(),
+        )
+        .plugin(quick::autostart_plugin())
+        .plugin(quick::shortcut_plugin());
 
     #[cfg(desktop)]
     {
@@ -66,8 +73,10 @@ pub fn run() {
             // (dark by default, matching the pre-theme background) and the
             // frontend re-applies the resolved theme once it reads the setting.
             material::apply_startup(app.handle(), true);
+            quick::initialize(app.handle())?;
             Ok(())
         })
+        .manage(quick::QuickState::default())
         .manage(net::NetState::new())
         .manage(net::voice::VoiceState::default())
         .manage(code::workspace::WorkspaceState::default())
@@ -111,7 +120,24 @@ pub fn run() {
             code::git::git_diff,
             code::git::git_log,
             code::git::git_commit,
+            quick::quick_get_settings,
+            quick::quick_update_settings,
+            quick::quick_hide,
+            quick::quick_open_main,
+            quick::quick_main_startup,
+            quick::quick_quit,
+            quick::quick_draft_load,
+            quick::quick_draft_save,
+            quick::quick_draft_clear,
+            quick::quick_set_runtime_state,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if quick::handle_close_requested(window) {
+                    api.prevent_close();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

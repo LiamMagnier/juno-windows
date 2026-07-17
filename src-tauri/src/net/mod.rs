@@ -15,6 +15,11 @@ use std::sync::Mutex as StdMutex;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
+pub struct ActiveStream {
+    pub cancel: CancellationToken,
+    pub owner: String,
+}
+
 pub const DEFAULT_BASE_URL: &str = "https://chat.liams.dev";
 
 #[derive(Clone, Debug)]
@@ -31,7 +36,7 @@ pub struct NetState {
     /// Held across a refresh so concurrent rotations are impossible —
     /// the server treats refresh-token reuse as theft and revokes the device.
     pub refresh_lock: Mutex<()>,
-    pub streams: StdMutex<HashMap<u64, CancellationToken>>,
+    pub streams: StdMutex<HashMap<u64, ActiveStream>>,
     pub next_stream_id: StdMutex<u64>,
 }
 
@@ -90,10 +95,68 @@ pub fn validate_api_path(path: &str) -> Result<(), String> {
     if !path.starts_with('/') {
         return Err("path must start with /".into());
     }
-    if path.contains("..") || path.contains("://") || path.starts_with("//") {
+    if path.contains("..")
+        || path.contains("://")
+        || path.starts_with("//")
+        || path.contains(['\\', '#'])
+        || path.chars().any(char::is_control)
+    {
         return Err("invalid path".into());
     }
     Ok(())
+}
+
+fn valid_receipt_lookup(path: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(&format!("https://quick.invalid{path}")) else {
+        return false;
+    };
+    if url.path() != "/chat/receipt" || url.fragment().is_some() {
+        return false;
+    }
+    let pairs: Vec<_> = url.query_pairs().collect();
+    if pairs.len() != 1 {
+        return false;
+    }
+    let (name, value) = &pairs[0];
+    matches!(name.as_ref(), "clientRequestId" | "generationId")
+        && (8..=120).contains(&value.len())
+        && value
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | ':' | '-'))
+}
+
+/// The Quick capability intentionally contains the shared transport commands,
+/// but the native boundary still constrains which account operations that
+/// renderer may perform. Main retains the complete API surface.
+pub fn validate_quick_api_access(label: &str, method: &str, path: &str) -> Result<(), String> {
+    if label != "quick" {
+        return Ok(());
+    }
+    if path.len() > 256 {
+        return Err("this API path is too long for Juno Quick".into());
+    }
+    let conversation_path = path.strip_prefix("/conversations/").filter(|tail| {
+        !tail.is_empty()
+            && !tail.contains('?')
+            && tail
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '/')
+    });
+    let allowed = matches!(
+        (method, path),
+        ("GET", "/v1/auth/session")
+            | ("GET", "/connectors")
+            | ("POST", "/chat/clarify")
+            | ("POST", "/chat/cancel")
+            | ("POST", "/chat/follow-ups")
+    ) || (method == "GET" && valid_receipt_lookup(path))
+        || matches!((method, conversation_path), ("GET", Some(id)) if !id.contains('/'))
+        || matches!((method, conversation_path), ("POST", Some(tail)) if tail.ends_with("/title") && !tail.trim_end_matches("/title").contains('/'));
+    if allowed {
+        Ok(())
+    } else {
+        Err("this API operation is not available from Juno Quick".into())
+    }
 }
 
 #[cfg(test)]
@@ -121,5 +184,41 @@ mod tests {
         assert!(validate_api_path("chat").is_err());
         assert!(validate_api_path("//evil.example/x").is_err());
         assert!(validate_api_path("/../secrets").is_err());
+    }
+
+    #[test]
+    fn quick_transport_is_method_and_path_scoped() {
+        assert!(validate_quick_api_access("quick", "POST", "/chat/clarify").is_ok());
+        assert!(validate_quick_api_access("quick", "GET", "/connectors").is_ok());
+        assert!(validate_quick_api_access("quick", "GET", "/conversations/abc-123").is_ok());
+        assert!(validate_quick_api_access("quick", "POST", "/conversations/abc-123/title").is_ok());
+        assert!(validate_quick_api_access(
+            "quick",
+            "GET",
+            "/chat/receipt?clientRequestId=request%3A12345678"
+        )
+        .is_ok());
+        assert!(validate_quick_api_access(
+            "quick",
+            "GET",
+            "/chat/receipt?generationId=generation-12345678"
+        )
+        .is_ok());
+        assert!(validate_quick_api_access(
+            "quick",
+            "GET",
+            "/chat/receipt?clientRequestId=request-12345678&generationId=generation-12345678"
+        )
+        .is_err());
+        assert!(validate_quick_api_access("quick", "GET", "/chat/receipt").is_err());
+        assert!(validate_quick_api_access(
+            "quick",
+            "POST",
+            "/chat/receipt?generationId=generation-12345678"
+        )
+        .is_err());
+        assert!(validate_quick_api_access("quick", "DELETE", "/conversations/abc-123").is_err());
+        assert!(validate_quick_api_access("quick", "GET", "/v1/devices").is_err());
+        assert!(validate_quick_api_access("main", "DELETE", "/conversations/abc-123").is_ok());
     }
 }

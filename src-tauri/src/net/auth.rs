@@ -244,6 +244,7 @@ pub async fn access_token(
         // Invalid, expired, reused, or revoked: the device session is dead.
         delete_refresh_token();
         *state.access.write() = None;
+        crate::quick::clear_departing_draft(app);
         let _ = app.emit(AUTH_REVOKED_EVENT, ());
         return Err(CommandError::new(
             "device_revoked",
@@ -279,6 +280,7 @@ pub async fn auth_sign_out(
     }
     delete_refresh_token();
     *state.access.write() = None;
+    crate::quick::clear_departing_draft(&app);
     Ok(())
 }
 

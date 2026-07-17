@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ws-changed-paths"
+description = "Enables the ws_changed_paths command without any pre-configured scope."
+commands.allow = ["ws_changed_paths"]
+
+[[permission]]
+identifier = "deny-ws-changed-paths"
+description = "Denies the ws_changed_paths command without any pre-configured scope."
+commands.deny = ["ws_changed_paths"]

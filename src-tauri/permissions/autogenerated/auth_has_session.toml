@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-has-session"
+description = "Enables the auth_has_session command without any pre-configured scope."
+commands.allow = ["auth_has_session"]
+
+[[permission]]
+identifier = "deny-auth-has-session"
+description = "Denies the auth_has_session command without any pre-configured scope."
+commands.deny = ["auth_has_session"]

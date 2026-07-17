@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-quick-main-startup"
+description = "Enables the quick_main_startup command without any pre-configured scope."
+commands.allow = ["quick_main_startup"]
+
+[[permission]]
+identifier = "deny-quick-main-startup"
+description = "Denies the quick_main_startup command without any pre-configured scope."
+commands.deny = ["quick_main_startup"]
