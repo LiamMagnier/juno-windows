@@ -7,6 +7,7 @@ pub mod auth;
 pub mod commands;
 pub mod stream;
 pub mod upload;
+pub mod voice;
 
 use parking_lot::RwLock;
 use std::collections::HashMap;

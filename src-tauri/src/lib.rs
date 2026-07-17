@@ -70,6 +70,7 @@ pub fn run() {
             Ok(())
         })
         .manage(net::NetState::new())
+        .manage(net::voice::VoiceState::default())
         .manage(code::workspace::WorkspaceState::default())
         .manage(code::terminal::TerminalState::default())
         .invoke_handler(tauri::generate_handler![
@@ -86,6 +87,10 @@ pub fn run() {
             net::stream::api_stream_cancel,
             net::upload::api_upload_path,
             net::upload::api_upload_bytes,
+            net::voice::voice_connect,
+            net::voice::voice_send_text,
+            net::voice::voice_send_audio,
+            net::voice::voice_close,
             code::workspace::workspace_pick,
             code::workspace::workspace_list,
             code::workspace::workspace_set_mode,

@@ -10,7 +10,7 @@ export function CodeView() {
         color: "hsl(var(--muted-foreground))",
       }}
     >
-      Loading…
+      Code mode isn't available yet.
     </div>
   );
 }

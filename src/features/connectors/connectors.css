@@ -1,0 +1,158 @@
+/* Connectors panel — Juno Windows design language. */
+
+.connectors-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.connectors-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.connectors-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.connectors-title {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.connectors-subtitle {
+  color: hsl(var(--muted-foreground));
+  font-size: var(--text-body);
+}
+
+.connectors-section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.connectors-section-empty {
+  color: hsl(var(--muted-foreground));
+  padding: 12px 0;
+}
+
+.connectors-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid hsl(var(--hairline));
+  border-radius: var(--radius-card);
+  background: hsl(var(--card));
+  overflow: hidden;
+}
+
+.connectors-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  transition: background var(--dur-fast) var(--ease-out-soft);
+}
+
+.connectors-row + .connectors-row {
+  border-top: 1px solid hsl(var(--hairline));
+}
+
+.connectors-row:hover {
+  background: hsl(var(--hover-fill));
+}
+
+.connectors-row-muted {
+  opacity: 0.55;
+}
+
+.connectors-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connectors-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connectors-row-label {
+  font-weight: 600;
+}
+
+.connectors-kind-badge {
+  font-size: var(--text-caption);
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: var(--radius-full);
+  padding: 0 8px;
+}
+
+.connectors-row-desc {
+  color: hsl(var(--muted-foreground));
+  font-size: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.connectors-row-meta {
+  color: hsl(var(--muted-foreground));
+  font-size: var(--text-caption);
+}
+
+.connectors-pending-note {
+  font-size: var(--text-caption);
+  color: hsl(var(--primary));
+  margin-top: 2px;
+}
+
+.connectors-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.connectors-catalog-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 0;
+}
+
+.connectors-loading,
+.connectors-refreshing {
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  padding: 16px 0;
+}
+
+.connectors-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 32px 24px;
+  border: 1px solid hsl(var(--destructive) / 0.3);
+  border-radius: var(--radius-card);
+}
+
+.connectors-error-text {
+  font-size: var(--text-caption);
+  color: hsl(var(--destructive));
+}

@@ -5,7 +5,7 @@
  */
 
 const DB_NAME = "juno";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export const STORES = [
   "conversations",
@@ -17,6 +17,7 @@ export const STORES = [
   "prompts",
   "meta", // cursor, bootstrap snapshot, model manifest
   "pendingMutations",
+  "codeSessions", // keyed sessionId -> persisted code-session transcript/meta
 ] as const;
 
 export type StoreName = (typeof STORES)[number];

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useUiStore, SIDEBAR_COMPACT } from "@/state/uiStore";
 import { useThreadStore } from "@/state/threadStore";
+import { setPendingProjectId } from "@/features/projects/projectContext";
 import { startSync, stopSync } from "@/lib/data/syncEngine";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import { MainPane } from "@/features/main/MainPane";
@@ -38,6 +39,9 @@ export function Shell() {
           toggleSidebar();
         } else if (e.key.toLowerCase() === "n") {
           e.preventDefault();
+          // A stashed "new chat in project" target must not leak into a
+          // plain Ctrl+N chat.
+          setPendingProjectId(null);
           useUiStore.getState().setView({ kind: "chat" });
           useThreadStore.getState().setActive(null);
         } else if (e.key === ",") {
