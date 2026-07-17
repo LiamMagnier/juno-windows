@@ -1472,7 +1472,8 @@
 .rs-input:focus-visible {
   outline: none;
 }
-.rs-input:focus-visible + .rs-thumb,
+/* The range input is the last child of .rs-track and the thumb is nested in an
+   earlier carrier, so :has() is the only path that reaches it. */
 .rs-track:has(.rs-input:focus-visible) .rs-thumb {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;

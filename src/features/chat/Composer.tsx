@@ -57,6 +57,7 @@ import { EFFORT_NONE, useChatPrefs } from "./chatPrefs";
 import {
   buildPrivateHistory,
   defaultEffort,
+  effortLabel,
   effortOptions,
   formatBytes,
 } from "./helpers";
@@ -168,7 +169,7 @@ export function Composer({
     : null;
   const effortDisplay =
     efforts.find((o) => o.value === selectedEffort)?.label ??
-    (selectedEffort ? selectedEffort : "Instant");
+    (selectedEffort ? effortLabel(selectedEffort) : "Instant");
 
   // ---- connectors selection (seeded from the conversation's stored set) ----
   const selectedConnectors = useMemo(
@@ -377,6 +378,12 @@ export function Composer({
       setDraft("");
       setStaged([]);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
+      // The new-chat composer reuses the constant "new" threadKey; clear its
+      // ephemeral per-send flags so Deep research / connectors picked for this
+      // message don't silently carry into the next unrelated new chat.
+      if (!privateMode && !conversationId) {
+        useChatPrefs.getState().resetThreadEphemera(threadKey);
+      }
       await sendMessage(options);
     },
     [
@@ -777,7 +784,7 @@ export function Composer({
             onToggleFavorite={toggleFavorite}
           />
 
-          {model && efforts.length > 0 ? (
+          {model && efforts.length > 1 ? (
             <div className="chat-pop-wrap">
               <button
                 type="button"

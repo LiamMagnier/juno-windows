@@ -33,6 +33,8 @@ interface ChatPrefsState {
   setCanvas(on: boolean): void;
   setDeepResearch(threadKey: string, on: boolean): void;
   setConnectors(threadKey: string, ids: string[]): void;
+  /** Clear a thread's ephemeral per-send flags (deep research + connectors). */
+  resetThreadEphemera(threadKey: string): void;
 }
 
 export const useChatPrefs = create<ChatPrefsState>()(
@@ -65,6 +67,12 @@ export const useChatPrefs = create<ChatPrefsState>()(
         set((s) => ({
           connectorsByThread: { ...s.connectorsByThread, [threadKey]: ids },
         })),
+      resetThreadEphemera: (threadKey) =>
+        set((s) => {
+          const { [threadKey]: _dr, ...deepResearchByThread } = s.deepResearchByThread;
+          const { [threadKey]: _c, ...connectorsByThread } = s.connectorsByThread;
+          return { deepResearchByThread, connectorsByThread };
+        }),
     }),
     {
       name: "juno.chat.prefs",

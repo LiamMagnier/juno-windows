@@ -27,16 +27,25 @@ function transparencyAllowed(userEnabled: boolean): boolean {
  *   .has-native-material — a real OS backdrop is live; chrome may be see-through
  *   .no-transparency     — force fully opaque surfaces everywhere
  */
+let materialSeq = 0;
+
 export async function applyWindowMaterial(dark: boolean, userEnabled: boolean): Promise<void> {
   const root = document.documentElement;
   const enabled = transparencyAllowed(userEnabled);
   root.classList.toggle("no-transparency", !enabled);
+  // Drop the see-through class synchronously when transparency is off: Rust
+  // clears Mica immediately, so leaving `.app-frame` transparent across the IPC
+  // round-trip would flash the desktop through the (transparent:true) window.
+  if (!enabled) root.classList.remove("has-native-material");
+  // Guard against out-of-order resolutions when theme/transparency toggle fast.
+  const seq = ++materialSeq;
   try {
     const res = await invoke<{ native: boolean }>("set_window_material", { dark, enabled });
+    if (seq !== materialSeq) return;
     root.classList.toggle("has-native-material", enabled && res.native);
   } catch {
     // Command unavailable (non-Tauri context / older shell): stay opaque-safe.
-    root.classList.remove("has-native-material");
+    if (seq === materialSeq) root.classList.remove("has-native-material");
   }
 }
 

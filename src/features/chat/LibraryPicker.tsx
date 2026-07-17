@@ -93,37 +93,35 @@ export function LibraryPicker({
             Nothing here yet. Files you attach to chats show up in your library.
           </div>
         ) : (
-          <ul className="library-grid" role="listbox" aria-label="Library files" aria-multiselectable="true">
+          <div className="library-grid" role="group" aria-label="Library files">
             {items?.map((item) => {
               const isSelected = selected.has(item.id);
               const atCap = !isSelected && selected.size >= remaining;
               return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    className="library-tile"
-                    data-selected={isSelected || undefined}
-                    disabled={atCap}
-                    onClick={() => toggle(item.id)}
-                  >
-                    {item.kind === "IMAGE" ? (
-                      <img className="library-thumb" src={fileUrl(item.url)} alt="" />
-                    ) : (
-                      <span className="library-thumb library-thumb-file">
-                        <FileText size={22} aria-hidden />
-                      </span>
-                    )}
-                    <span className="library-tile-name" title={item.fileName}>
-                      {item.fileName}
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  className="library-tile"
+                  data-selected={isSelected || undefined}
+                  disabled={atCap}
+                  onClick={() => toggle(item.id)}
+                >
+                  {item.kind === "IMAGE" ? (
+                    <img className="library-thumb" src={fileUrl(item.url)} alt="" />
+                  ) : (
+                    <span className="library-thumb library-thumb-file">
+                      <FileText size={22} aria-hidden />
                     </span>
-                    <span className="library-tile-size">{formatBytes(item.size)}</span>
-                  </button>
-                </li>
+                  )}
+                  <span className="library-tile-name" title={item.fileName}>
+                    {item.fileName}
+                  </span>
+                  <span className="library-tile-size">{formatBytes(item.size)}</span>
+                </button>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
       <div className="dialog-actions">

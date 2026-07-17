@@ -106,7 +106,9 @@
      collapses all of this to solid fills. */
   --acrylic-blur: 30px;
   --acrylic-saturate: 1.8;
-  --titlebar-fill: hsl(var(--titlebar) / 0.36);
+  /* 0.5 (not thinner): caption glyphs sit on this over live Mica, so it has to
+     hold AA on a busy/light wallpaper, not just a calm one. */
+  --titlebar-fill: hsl(var(--titlebar) / 0.5);
   --sidebar-fill: hsl(var(--sidebar) / 0.62);
   --flyout-fill: hsl(var(--popover) / 0.80);
   --flyout-blur: 26px;
@@ -172,7 +174,7 @@
   --well-inset: inset 0 1px 2px hsl(0 0% 0% / 0.38);
 
   /* Dark chrome leans a touch more opaque so text stays legible over Mica. */
-  --titlebar-fill: hsl(var(--titlebar) / 0.42);
+  --titlebar-fill: hsl(var(--titlebar) / 0.58);
   --sidebar-fill: hsl(var(--sidebar) / 0.58);
   --flyout-fill: hsl(var(--popover) / 0.72);
   --material-wash:

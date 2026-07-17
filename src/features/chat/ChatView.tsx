@@ -70,6 +70,8 @@ export function ChatView() {
       ...(model?.capabilities.webSearch ? { webSearch: prefs.webSearch } : {}),
       ...(effort ? { reasoningEffort: effort } : {}),
       connectors: connectors.slice(0, 5),
+      canvasEnabled: prefs.canvas,
+      ...(prefs.deepResearchByThread[threadKey] ? { deepResearch: true } : {}),
     });
   }, [conversationId, modelId, models, threadKey, conversation?.activeConnectors]);
 
@@ -91,6 +93,8 @@ export function ChatView() {
       ...(model?.capabilities.webSearch ? { webSearch: prefs.webSearch } : {}),
       ...(effort ? { reasoningEffort: effort } : {}),
       connectors: connectors.slice(0, 5),
+      canvasEnabled: prefs.canvas,
+      ...(prefs.deepResearchByThread[threadKey] ? { deepResearch: true } : {}),
     });
   }, [conversationId, modelId, models, threadKey, conversation?.activeConnectors]);
 

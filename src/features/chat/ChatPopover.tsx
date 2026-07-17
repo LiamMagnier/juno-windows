@@ -24,6 +24,12 @@ export function ChatPopover({
   useEffect(() => {
     if (!open) return;
     const wrap = ref.current?.parentElement;
+    // Move focus into the dialog on open so keyboard users land inside it (and
+    // Tab is scoped to its content); Escape/close returns focus to the trigger.
+    const first = ref.current?.querySelector<HTMLElement>(
+      'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+    );
+    (first ?? ref.current)?.focus();
     const onPointerDown = (e: PointerEvent) => {
       if (wrap && !wrap.contains(e.target as Node)) onClose();
     };
@@ -53,6 +59,7 @@ export function ChatPopover({
       role="dialog"
       aria-label={label}
       data-align={align}
+      tabIndex={-1}
       style={width !== undefined ? { width } : undefined}
     >
       {children}
