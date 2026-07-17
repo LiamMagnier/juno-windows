@@ -1,3 +1,4 @@
+mod code;
 mod error;
 mod host;
 mod net;
@@ -69,6 +70,8 @@ pub fn run() {
             Ok(())
         })
         .manage(net::NetState::new())
+        .manage(code::workspace::WorkspaceState::default())
+        .manage(code::terminal::TerminalState::default())
         .invoke_handler(tauri::generate_handler![
             secrets::secret_set,
             secrets::secret_get,
@@ -83,6 +86,26 @@ pub fn run() {
             net::stream::api_stream_cancel,
             net::upload::api_upload_path,
             net::upload::api_upload_bytes,
+            code::workspace::workspace_pick,
+            code::workspace::workspace_list,
+            code::workspace::workspace_set_mode,
+            code::workspace::workspace_revoke,
+            code::fs::ws_list,
+            code::fs::ws_read,
+            code::fs::ws_write,
+            code::fs::ws_delete_file,
+            code::search::ws_search,
+            code::checkpoints::ws_snapshot,
+            code::checkpoints::ws_restore_to_before,
+            code::checkpoints::ws_changed_paths,
+            code::terminal::pty_run,
+            code::terminal::pty_write,
+            code::terminal::pty_kill,
+            code::terminal::pty_kill_session,
+            code::git::git_status,
+            code::git::git_diff,
+            code::git::git_log,
+            code::git::git_commit,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
