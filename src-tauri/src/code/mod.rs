@@ -20,12 +20,20 @@ use std::path::{Component, Path, PathBuf};
 pub fn resolve_in_root(root: &Path, relative: &str) -> Result<PathBuf, CommandError> {
     let rel = Path::new(relative);
     if rel.is_absolute() {
-        return Err(CommandError::new("path_escape", "Absolute paths are not allowed."));
+        return Err(CommandError::new(
+            "path_escape",
+            "Absolute paths are not allowed.",
+        ));
     }
     for component in rel.components() {
         match component {
             Component::Normal(_) | Component::CurDir => {}
-            _ => return Err(CommandError::new("path_escape", "Path traversal is not allowed.")),
+            _ => {
+                return Err(CommandError::new(
+                    "path_escape",
+                    "Path traversal is not allowed.",
+                ))
+            }
         }
     }
     let joined = root.join(rel);
@@ -47,7 +55,13 @@ pub fn resolve_in_root(root: &Path, relative: &str) -> Result<PathBuf, CommandEr
                 let mut result = canonical;
                 // Re-append the non-existent tail (already validated: normal
                 // components only).
-                for part in suffix.components().rev().collect::<Vec<_>>().into_iter().rev() {
+                for part in suffix
+                    .components()
+                    .rev()
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                {
                     result.push(part);
                 }
                 return Ok(result);
@@ -56,9 +70,9 @@ pub fn resolve_in_root(root: &Path, relative: &str) -> Result<PathBuf, CommandEr
                 let parent = probe.parent().ok_or_else(|| {
                     CommandError::new("path_escape", "That path leaves the workspace.")
                 })?;
-                let name = probe.file_name().ok_or_else(|| {
-                    CommandError::new("path_escape", "Invalid path.")
-                })?;
+                let name = probe
+                    .file_name()
+                    .ok_or_else(|| CommandError::new("path_escape", "Invalid path."))?;
                 suffix = Path::new(name).join(&suffix);
                 probe = parent;
             }

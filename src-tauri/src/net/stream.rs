@@ -16,10 +16,18 @@ use tokio_util::sync::CancellationToken;
 pub enum StreamEvent {
     /// HTTP status + whether body streaming begins (non-2xx bodies are
     /// delivered whole in `error.body`).
-    Started { status: u16 },
-    Chunk { data: String },
+    Started {
+        status: u16,
+    },
+    Chunk {
+        data: String,
+    },
     End,
-    Error { message: String, status: u16, body: String },
+    Error {
+        message: String,
+        status: u16,
+        body: String,
+    },
 }
 
 #[derive(Serialize)]
@@ -45,7 +53,11 @@ pub async fn api_stream(
         id
     };
     let cancel = CancellationToken::new();
-    state.streams.lock().unwrap().insert(stream_id, cancel.clone());
+    state
+        .streams
+        .lock()
+        .unwrap()
+        .insert(stream_id, cancel.clone());
 
     let url = state.api_url(&path);
     let client = state.client.clone();

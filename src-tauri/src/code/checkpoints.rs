@@ -1,8 +1,8 @@
 //! Per-session file checkpoints: snapshot before mutation, restore by turn.
 //! Port of juno-app/core/src/checkpoints.ts onto the app-data directory.
 
-use super::workspace::grant_root;
 use super::resolve_in_root;
+use super::workspace::grant_root;
 use crate::error::CommandError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -18,7 +18,11 @@ struct SnapshotMeta {
 }
 
 fn session_dir(app: &tauri::AppHandle, session_id: &str) -> Result<PathBuf, CommandError> {
-    if session_id.is_empty() || !session_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+    if session_id.is_empty()
+        || !session_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-')
+    {
         return Err(CommandError::new("invalid_session", "Invalid session id."));
     }
     let dir = app
@@ -32,14 +36,14 @@ fn session_dir(app: &tauri::AppHandle, session_id: &str) -> Result<PathBuf, Comm
     Ok(dir)
 }
 
-fn load_index(dir: &PathBuf) -> Vec<SnapshotMeta> {
+fn load_index(dir: &std::path::Path) -> Vec<SnapshotMeta> {
     std::fs::read_to_string(dir.join("index.json"))
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
         .unwrap_or_default()
 }
 
-fn save_index(dir: &PathBuf, index: &[SnapshotMeta]) -> Result<(), CommandError> {
+fn save_index(dir: &std::path::Path, index: &[SnapshotMeta]) -> Result<(), CommandError> {
     let json = serde_json::to_string(index)
         .map_err(|e| CommandError::new("serialize_failed", e.to_string()))?;
     std::fs::write(dir.join("index.json"), json)
@@ -72,7 +76,12 @@ pub fn ws_snapshot(
     } else {
         String::new()
     };
-    index.push(SnapshotMeta { turn, path, file, existed });
+    index.push(SnapshotMeta {
+        turn,
+        path,
+        file,
+        existed,
+    });
     save_index(&dir, &index)
 }
 
@@ -93,18 +102,14 @@ pub fn ws_restore_to_before(
 ) -> Result<RestoreResult, CommandError> {
     let (root, grant) = grant_root(&app, &workspace_id)?;
     if !grant.permission_mode.allows_writes() {
-        return Err(CommandError::new("workspace_read_only", "This workspace is read-only."));
+        return Err(CommandError::new(
+            "workspace_read_only",
+            "This workspace is read-only.",
+        ));
     }
     let dir = session_dir(&app, &session_id)?;
     let mut index = load_index(&dir);
     let mut restored = Vec::new();
-    // Later snapshots first, so the earliest (pre-turn) state wins last.
-    let mut affected: Vec<SnapshotMeta> = index
-        .iter()
-        .filter(|s| s.turn >= turn)
-        .cloned()
-        .collect();
-    affected.sort_by(|a, b| b.turn.cmp(&a.turn));
     // Earliest snapshot per path is authoritative for "before turn N".
     let mut earliest: std::collections::HashMap<String, SnapshotMeta> = Default::default();
     for snap in index.iter().filter(|s| s.turn >= turn) {
@@ -148,9 +153,15 @@ pub fn ws_changed_paths(
     let index = load_index(&dir);
     let mut paths_by_turn: std::collections::HashMap<u32, Vec<String>> = Default::default();
     for snap in &index {
-        paths_by_turn.entry(snap.turn).or_default().push(snap.path.clone());
+        paths_by_turn
+            .entry(snap.turn)
+            .or_default()
+            .push(snap.path.clone());
     }
     let mut turns: Vec<u32> = paths_by_turn.keys().copied().collect();
     turns.sort_unstable();
-    Ok(ChangedPaths { turns, paths_by_turn })
+    Ok(ChangedPaths {
+        turns,
+        paths_by_turn,
+    })
 }

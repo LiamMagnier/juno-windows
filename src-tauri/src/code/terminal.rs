@@ -19,9 +19,19 @@ const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 #[derive(Clone, Serialize)]
 #[serde(tag = "event", rename_all = "camelCase")]
 pub enum RunEvent {
-    Output { data: String },
-    Exit { code: i32, truncated: bool },
-    Error { message: String },
+    // `Error` is part of the wire union the frontend matches on; Rust only
+    // constructs it from the reader loop today via the other arms.
+    Output {
+        data: String,
+    },
+    Exit {
+        code: i32,
+        truncated: bool,
+    },
+    #[allow(dead_code)]
+    Error {
+        message: String,
+    },
 }
 
 struct RunningCommand {
@@ -46,6 +56,7 @@ pub struct RunHandle {
 /// contained subdirectory). Output streams over the channel; the run stays
 /// registered until exit or kill.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub fn pty_run(
     app: tauri::AppHandle,
     workspace_id: String,
@@ -169,11 +180,7 @@ pub fn pty_run(
 
 /// Write to a running command's stdin (interactive prompts).
 #[tauri::command]
-pub fn pty_write(
-    app: tauri::AppHandle,
-    run_id: u64,
-    data: String,
-) -> Result<(), CommandError> {
+pub fn pty_write(app: tauri::AppHandle, run_id: u64, data: String) -> Result<(), CommandError> {
     let state = app.state::<TerminalState>();
     let mut running = state.running.lock();
     let run = running

@@ -48,15 +48,13 @@ async fn send_once(
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .body(body.to_string());
     }
-    req.send()
-        .await
-        .map_err(|e| {
-            if e.is_timeout() {
-                CommandError::new("timeout", "The request timed out.")
-            } else {
-                CommandError::new("network_error", e.without_url().to_string())
-            }
-        })
+    req.send().await.map_err(|e| {
+        if e.is_timeout() {
+            CommandError::new("timeout", "The request timed out.")
+        } else {
+            CommandError::new("network_error", e.without_url().to_string())
+        }
+    })
 }
 
 /// Proxy a JSON API call. Returns status + raw body; the frontend owns
@@ -75,9 +73,27 @@ pub async fn api_request(
     let method = method_from(&method)?;
     let timeout = timeout_ms.unwrap_or(30_000).min(300_000);
 
-    let mut res = send_once(&app, &state, &method, &path, body_json.as_deref(), false, timeout).await?;
+    let mut res = send_once(
+        &app,
+        &state,
+        &method,
+        &path,
+        body_json.as_deref(),
+        false,
+        timeout,
+    )
+    .await?;
     if res.status() == reqwest::StatusCode::UNAUTHORIZED {
-        res = send_once(&app, &state, &method, &path, body_json.as_deref(), true, timeout).await?;
+        res = send_once(
+            &app,
+            &state,
+            &method,
+            &path,
+            body_json.as_deref(),
+            true,
+            timeout,
+        )
+        .await?;
     }
     let status = res.status().as_u16();
     let body = res

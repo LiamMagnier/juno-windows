@@ -95,7 +95,12 @@ pub async fn voice_connect(
         while let Some(frame) = source.next().await {
             match frame {
                 Ok(Message::Text(text)) => {
-                    if channel.send(VoiceEvent::Text { data: text.to_string() }).is_err() {
+                    if channel
+                        .send(VoiceEvent::Text {
+                            data: text.to_string(),
+                        })
+                        .is_err()
+                    {
                         break;
                     }
                 }
@@ -112,12 +117,16 @@ pub async fn voice_connect(
                 }
                 Ok(_) => {}
                 Err(e) => {
-                    let _ = channel.send(VoiceEvent::Error { message: e.to_string() });
+                    let _ = channel.send(VoiceEvent::Error {
+                        message: e.to_string(),
+                    });
                     break;
                 }
             }
         }
-        let _ = channel.send(VoiceEvent::Closed { reason: "eof".into() });
+        let _ = channel.send(VoiceEvent::Closed {
+            reason: "eof".into(),
+        });
     });
 
     Ok(conn_id)

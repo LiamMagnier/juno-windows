@@ -80,10 +80,7 @@ pub fn validate_base_url(url: &str) -> Result<String, String> {
         "{}://{}{}",
         parsed.scheme(),
         parsed.host_str().unwrap_or(""),
-        parsed
-            .port()
-            .map(|p| format!(":{p}"))
-            .unwrap_or_default()
+        parsed.port().map(|p| format!(":{p}")).unwrap_or_default()
     ))
 }
 

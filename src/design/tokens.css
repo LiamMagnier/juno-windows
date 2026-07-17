@@ -24,14 +24,17 @@
   --secondary: 40 14% 95%;
   --secondary-foreground: 30 8% 18%;
   --muted: 40 14% 95%;
-  --muted-foreground: 35 5% 44%;
+  /* 42% (not the web's 44%): >=4.5:1 on both --background and --muted. */
+  --muted-foreground: 35 5% 42%;
   --accent-surface: 40 18% 93%;
   --accent-surface-foreground: 30 8% 18%;
 
-  /* ---- Accent (terracotta default; swappable via [data-accent]) ---- */
-  --primary: 15 56% 49%;
+  /* ---- Accent (terracotta default; swappable via [data-accent]) ----
+     46% lightness (vs the shared 49%): white-on-primary and primary-on-bg
+     both clear WCAG AA while staying unmistakably terracotta. */
+  --primary: 15 56% 46%;
   --primary-foreground: 0 0% 100%;
-  --ring: 15 56% 49%;
+  --ring: 15 56% 46%;
 
   /* ---- Status ---- */
   --destructive: 4 62% 50%;
@@ -111,8 +114,9 @@
   --accent-surface: 32 5% 9%;
   --accent-surface-foreground: 40 12% 90%;
 
+  /* Dark accent pairs with near-black text (white fails AA on this coral). */
   --primary: 14 70% 58%;
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 30 45% 10%;
   --ring: 14 70% 58%;
 
   --destructive: 6 66% 60%;

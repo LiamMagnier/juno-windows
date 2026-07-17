@@ -1,8 +1,8 @@
 //! Regex content search over a workspace (ripgrep's engine: gitignore-aware,
 //! capped results).
 
-use super::workspace::grant_root;
 use super::resolve_in_root;
+use super::workspace::grant_root;
 use crate::error::CommandError;
 use grep_regex::RegexMatcherBuilder;
 use grep_searcher::sinks::UTF8;

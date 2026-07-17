@@ -1,0 +1,256 @@
+/* Inline voice panel — compact card docked above the chat composer. */
+
+.voice-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  max-height: 180px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--hairline-strong));
+  border-radius: var(--radius-float);
+  box-shadow: var(--shadow-pop);
+  animation: voice-rise-in var(--dur-base) var(--ease-out-expo);
+}
+
+@keyframes voice-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---- orb ---- */
+
+.voice-orb-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-orb {
+  /* Glow alpha is driven inline from the real session amplitude. */
+  --orb-color: var(--primary);
+  --orb-glow: 0.25;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.14);
+  box-shadow: 0 0 18px hsl(var(--orb-color) / var(--orb-glow));
+  transition:
+    transform 90ms var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
+}
+
+.voice-orb[data-state="speaking"] {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.voice-orb[data-state="speaking"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.3);
+  animation: voice-pulse 1.4s var(--ease-out-soft) infinite;
+}
+
+@keyframes voice-pulse {
+  50% {
+    box-shadow: 0 0 0 7px hsl(var(--primary) / 0.1);
+  }
+}
+
+.voice-orb[data-state="thinking"]::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: var(--radius-full);
+  border: 1.5px dashed hsl(var(--primary) / 0.55);
+  animation: voice-rotate 3.2s linear infinite;
+}
+
+.voice-orb[data-state="muted"] {
+  --orb-color: var(--muted-foreground);
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.voice-orb[data-state="connecting"] {
+  --orb-color: var(--muted-foreground);
+  background: hsl(var(--secondary));
+  color: hsl(var(--muted-foreground));
+}
+
+.voice-orb[data-state="connecting"]::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: var(--radius-full);
+  border: 2px solid hsl(var(--primary) / 0.18);
+  border-top-color: hsl(var(--primary));
+  animation: voice-rotate 0.9s linear infinite;
+}
+
+.voice-orb[data-state="error"] {
+  --orb-color: var(--destructive);
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+}
+
+.voice-orb[data-state="ended"] {
+  --orb-color: var(--muted-foreground);
+  background: hsl(var(--secondary));
+  color: hsl(var(--muted-foreground));
+  box-shadow: none;
+}
+
+@keyframes voice-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- center: captions / state label / messages ---- */
+
+.voice-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  max-height: 156px;
+  overflow: hidden;
+}
+
+.voice-caption-assistant {
+  font-size: var(--text-body);
+  line-height: 1.45;
+  color: hsl(var(--foreground));
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+
+.voice-caption-assistant[data-partial] {
+  color: hsl(var(--foreground) / 0.75);
+  animation: voice-shimmer 1.6s ease-in-out infinite;
+}
+
+.voice-caption-user {
+  font-size: var(--text-caption);
+  font-style: italic;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+
+.voice-caption-user[data-partial] {
+  animation: voice-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes voice-shimmer {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.voice-state-label {
+  font-size: var(--text-body);
+  color: hsl(var(--muted-foreground));
+}
+
+.voice-note {
+  font-size: var(--text-body);
+  line-height: 1.45;
+  color: hsl(var(--foreground));
+  overflow-wrap: break-word;
+}
+
+.voice-error-text {
+  color: hsl(var(--destructive));
+}
+
+/* ---- right controls ---- */
+
+.voice-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.voice-cost {
+  padding-right: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+}
+
+.voice-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  color: hsl(var(--muted-foreground));
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
+}
+
+.voice-icon-btn:hover:not(:disabled) {
+  background: hsl(var(--hover-fill));
+  color: hsl(var(--foreground));
+}
+
+.voice-icon-btn:active:not(:disabled) {
+  background: hsl(var(--press-fill));
+}
+
+.voice-icon-btn:disabled {
+  opacity: 0.45;
+}
+
+.voice-icon-btn[data-active] {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.12);
+}
+
+.voice-end-btn:hover:not(:disabled) {
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+}
+
+.voice-restart-btn {
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+/* ---- forced colors ---- */
+
+@media (forced-colors: active) {
+  .voice-panel,
+  .voice-orb {
+    border: 1px solid CanvasText;
+  }
+}

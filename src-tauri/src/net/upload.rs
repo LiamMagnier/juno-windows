@@ -67,10 +67,16 @@ pub async fn api_upload_path(
         .await
         .map_err(|_| CommandError::new("file_not_found", "That file could not be read."))?;
     if !metadata.is_file() {
-        return Err(CommandError::new("not_a_file", "Only files can be uploaded."));
+        return Err(CommandError::new(
+            "not_a_file",
+            "Only files can be uploaded.",
+        ));
     }
     if metadata.len() > MAX_UPLOAD_BYTES {
-        return Err(CommandError::new("file_too_large", "That file is too large."));
+        return Err(CommandError::new(
+            "file_too_large",
+            "That file is too large.",
+        ));
     }
     let file_name = path_buf
         .file_name()
@@ -83,7 +89,16 @@ pub async fn api_upload_path(
     let bytes = tokio::fs::read(&path_buf)
         .await
         .map_err(|_| CommandError::new("file_read_failed", "That file could not be read."))?;
-    do_upload(&app, &state, file_name, mime_type, bytes, conversation_id, project_id).await
+    do_upload(
+        &app,
+        &state,
+        file_name,
+        mime_type,
+        bytes,
+        conversation_id,
+        project_id,
+    )
+    .await
 }
 
 #[tauri::command]
@@ -97,7 +112,19 @@ pub async fn api_upload_bytes(
     project_id: Option<String>,
 ) -> Result<UploadResponse, CommandError> {
     if bytes.len() as u64 > MAX_UPLOAD_BYTES {
-        return Err(CommandError::new("file_too_large", "That file is too large."));
+        return Err(CommandError::new(
+            "file_too_large",
+            "That file is too large.",
+        ));
     }
-    do_upload(&app, &state, file_name, mime_type, bytes, conversation_id, project_id).await
+    do_upload(
+        &app,
+        &state,
+        file_name,
+        mime_type,
+        bytes,
+        conversation_id,
+        project_id,
+    )
+    .await
 }

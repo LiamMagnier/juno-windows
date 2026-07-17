@@ -74,8 +74,7 @@ fn save_grants(app: &tauri::AppHandle, state: &WorkspaceState) -> Result<(), Com
     let grants: Vec<WorkspaceGrant> = state.grants.read().values().cloned().collect();
     let json = serde_json::to_string_pretty(&grants)
         .map_err(|e| CommandError::new("serialize_failed", e.to_string()))?;
-    std::fs::write(&file, json)
-        .map_err(|e| CommandError::new("write_failed", e.to_string()))?;
+    std::fs::write(&file, json).map_err(|e| CommandError::new("write_failed", e.to_string()))?;
     Ok(())
 }
 
@@ -107,10 +106,7 @@ fn format_unix_iso(secs: u64) -> String {
 }
 
 /// Resolve a grant or fail. Central chokepoint for every code command.
-pub fn grant(
-    app: &tauri::AppHandle,
-    id: &str,
-) -> Result<WorkspaceGrant, CommandError> {
+pub fn grant(app: &tauri::AppHandle, id: &str) -> Result<WorkspaceGrant, CommandError> {
     let state = app.state::<WorkspaceState>();
     load_grants(app, &state)?;
     let found = state.grants.read().get(id).cloned();
@@ -119,7 +115,10 @@ pub fn grant(
     })
 }
 
-pub fn grant_root(app: &tauri::AppHandle, id: &str) -> Result<(PathBuf, WorkspaceGrant), CommandError> {
+pub fn grant_root(
+    app: &tauri::AppHandle,
+    id: &str,
+) -> Result<(PathBuf, WorkspaceGrant), CommandError> {
     let g = grant(app, id)?;
     let root = super::dunce_canonicalize(std::path::Path::new(&g.path))?;
     Ok((root, g))
@@ -128,11 +127,10 @@ pub fn grant_root(app: &tauri::AppHandle, id: &str) -> Result<(PathBuf, Workspac
 /// Opens the OS folder picker and records a grant for the chosen folder.
 #[tauri::command]
 pub async fn workspace_pick(app: tauri::AppHandle) -> Result<Option<WorkspaceGrant>, CommandError> {
-    let picked = app
-        .dialog()
-        .file()
-        .blocking_pick_folder();
-    let Some(folder) = picked else { return Ok(None) };
+    let picked = app.dialog().file().blocking_pick_folder();
+    let Some(folder) = picked else {
+        return Ok(None);
+    };
     let path = folder
         .into_path()
         .map_err(|e| CommandError::new("invalid_folder", e.to_string()))?;
@@ -141,7 +139,10 @@ pub async fn workspace_pick(app: tauri::AppHandle) -> Result<Option<WorkspaceGra
     // Refuse obviously dangerous roots: filesystem root, home root, and
     // system directories make "workspace-bounded" meaningless.
     if canonical.parent().is_none() {
-        return Err(CommandError::new("root_too_broad", "Pick a project folder, not a drive root."));
+        return Err(CommandError::new(
+            "root_too_broad",
+            "Pick a project folder, not a drive root.",
+        ));
     }
     if let Some(home) = dirs::home_dir() {
         if canonical == home {

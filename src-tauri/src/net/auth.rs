@@ -85,10 +85,7 @@ fn parse_rfc3339_ms(s: &str) -> Option<i64> {
     let hour: i64 = tparts.next()?.parse().ok()?;
     let minute: i64 = tparts.next()?.parse().ok()?;
     let second: i64 = tparts.next()?.parse().ok()?;
-    let millis: i64 = s
-        .get(20..23)
-        .and_then(|m| m.parse().ok())
-        .unwrap_or(0);
+    let millis: i64 = s.get(20..23).and_then(|m| m.parse().ok()).unwrap_or(0);
 
     // Days since epoch (civil-from-days algorithm, Howard Hinnant).
     let y = if month <= 2 { year - 1 } else { year };
@@ -159,6 +156,7 @@ pub async fn auth_configure(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn auth_exchange(
     state: tauri::State<'_, NetState>,
     code: String,
@@ -277,12 +275,7 @@ pub async fn auth_sign_out(
     // Best-effort server-side revocation with whatever token we still have.
     if let Ok(token) = access_token(&app, &state, false).await {
         let url = state.api_url("/v1/auth/logout");
-        let _ = state
-            .client
-            .post(url)
-            .bearer_auth(token)
-            .send()
-            .await;
+        let _ = state.client.post(url).bearer_auth(token).send().await;
     }
     delete_refresh_token();
     *state.access.write() = None;
@@ -298,10 +291,8 @@ mod tests {
         assert_eq!(parse_rfc3339_ms("1970-01-01T00:00:00.000Z"), Some(0));
         assert_eq!(parse_rfc3339_ms("1970-01-02T00:00:00Z"), Some(86_400_000));
         // 2026-07-17T00:00:00Z
+        // A known date: 2026-07-17 is 20651 days after the epoch.
         let ms = parse_rfc3339_ms("2026-07-17T00:00:00.000Z").unwrap();
-        assert_eq!(ms % 1000, 0);
-        assert_eq!((ms / 86_400_000 - 719_468 % 1) as i64 % 7, ms / 86_400_000 % 7);
-        // round-trips a known date: 2026-07-17 is 20651 days after epoch
         assert_eq!(ms, 20_651_i64 * 86_400_000);
     }
 
@@ -312,7 +303,10 @@ mod tests {
             "Unauthorized"
         );
         assert_eq!(
-            extract_error_message(r#"{"error":{"code":"invalid_grant","message":"Bad."}}"#, "x"),
+            extract_error_message(
+                r#"{"error":{"code":"invalid_grant","message":"Bad."}}"#,
+                "x"
+            ),
             "Bad."
         );
         assert_eq!(extract_error_message("not json", "fallback"), "fallback");

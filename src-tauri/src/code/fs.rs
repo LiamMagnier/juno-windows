@@ -2,8 +2,8 @@
 //! writes. Writes are refused at this layer when the grant is read-only —
 //! defense in depth under the TS permission engine.
 
-use super::workspace::grant_root;
 use super::resolve_in_root;
+use super::workspace::grant_root;
 use crate::error::CommandError;
 use serde::Serialize;
 use std::io::Write;
@@ -78,7 +78,11 @@ pub fn ws_list(
             break;
         }
     }
-    entries.sort_by(|a, b| (b.is_dir, a.path.to_lowercase()).cmp(&(a.is_dir, b.path.to_lowercase())).reverse());
+    entries.sort_by(|a, b| {
+        (b.is_dir, a.path.to_lowercase())
+            .cmp(&(a.is_dir, b.path.to_lowercase()))
+            .reverse()
+    });
     Ok(entries)
 }
 
@@ -93,7 +97,10 @@ pub fn ws_read(
     let meta = std::fs::metadata(&absolute)
         .map_err(|_| CommandError::new("not_found", format!("File not found: {path}")))?;
     if meta.is_dir() {
-        return Err(CommandError::new("is_directory", format!("{path} is a directory.")));
+        return Err(CommandError::new(
+            "is_directory",
+            format!("{path} is a directory."),
+        ));
     }
     let size = meta.len();
     let bytes = if size > MAX_READ_BYTES {
@@ -146,7 +153,10 @@ pub fn ws_write(
     }
     let tmp = absolute.with_extension(format!(
         "{}.juno-tmp",
-        absolute.extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default()
+        absolute
+            .extension()
+            .map(|e| e.to_string_lossy().to_string())
+            .unwrap_or_default()
     ));
     {
         let mut file = std::fs::File::create(&tmp)
@@ -170,7 +180,10 @@ pub fn ws_delete_file(
 ) -> Result<(), CommandError> {
     let (root, grant) = grant_root(&app, &workspace_id)?;
     if !grant.permission_mode.allows_writes() {
-        return Err(CommandError::new("workspace_read_only", "This workspace is read-only."));
+        return Err(CommandError::new(
+            "workspace_read_only",
+            "This workspace is read-only.",
+        ));
     }
     let absolute = resolve_in_root(&root, &path)?;
     let meta = std::fs::metadata(&absolute)

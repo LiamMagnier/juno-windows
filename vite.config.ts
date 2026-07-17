@@ -36,7 +36,7 @@ export default defineConfig({
   build: {
     // WebView2 on Windows 10+ is evergreen Chromium
     target: "chrome120",
-    minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
+    minify: !process.env.TAURI_ENV_DEBUG,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },
   test: {

@@ -49,9 +49,9 @@ fn run_git(root: &Path, args: &[&str]) -> Result<(bool, String), CommandError> {
         use std::os::windows::process::CommandExt;
         cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
     }
-    let output = cmd
-        .output()
-        .map_err(|_| CommandError::new("git_unavailable", "Git isn't installed or isn't on PATH."))?;
+    let output = cmd.output().map_err(|_| {
+        CommandError::new("git_unavailable", "Git isn't installed or isn't on PATH.")
+    })?;
     let text = if output.status.success() {
         String::from_utf8_lossy(&output.stdout).to_string()
     } else {
@@ -177,7 +177,11 @@ pub fn git_log(
     let n = limit.unwrap_or(20).min(100).to_string();
     let (ok, out) = run_git(
         &root,
-        &["log", &format!("-{n}"), "--pretty=format:%h%x1f%s%x1f%an%x1f%aI"],
+        &[
+            "log",
+            &format!("-{n}"),
+            "--pretty=format:%h%x1f%s%x1f%an%x1f%aI",
+        ],
     )?;
     if !ok {
         return Ok(vec![]);
@@ -206,11 +210,17 @@ pub fn git_commit(
 ) -> Result<String, CommandError> {
     let (root, grant) = grant_root(&app, &workspace_id)?;
     if !grant.permission_mode.allows_writes() {
-        return Err(CommandError::new("workspace_read_only", "This workspace is read-only."));
+        return Err(CommandError::new(
+            "workspace_read_only",
+            "This workspace is read-only.",
+        ));
     }
     let message = message.trim();
     if message.is_empty() || message.len() > 5_000 {
-        return Err(CommandError::new("invalid_message", "Provide a commit message."));
+        return Err(CommandError::new(
+            "invalid_message",
+            "Provide a commit message.",
+        ));
     }
     match paths {
         Some(list) if !list.is_empty() => {
@@ -222,19 +232,28 @@ pub fn git_commit(
             let arg_refs: Vec<&str> = args.iter().map(String::as_str).collect();
             let (ok, out) = run_git(&root, &arg_refs)?;
             if !ok {
-                return Err(CommandError::new("git_add_failed", out.chars().take(500).collect::<String>()));
+                return Err(CommandError::new(
+                    "git_add_failed",
+                    out.chars().take(500).collect::<String>(),
+                ));
             }
         }
         _ => {
             let (ok, out) = run_git(&root, &["add", "-A"])?;
             if !ok {
-                return Err(CommandError::new("git_add_failed", out.chars().take(500).collect::<String>()));
+                return Err(CommandError::new(
+                    "git_add_failed",
+                    out.chars().take(500).collect::<String>(),
+                ));
             }
         }
     }
     let (ok, out) = run_git(&root, &["commit", "-m", message])?;
     if !ok {
-        return Err(CommandError::new("git_commit_failed", out.chars().take(500).collect::<String>()));
+        return Err(CommandError::new(
+            "git_commit_failed",
+            out.chars().take(500).collect::<String>(),
+        ));
     }
     Ok(out)
 }
