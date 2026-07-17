@@ -50,6 +50,9 @@ export interface ApiErrorEnvelope {
 
 /** Error surfaced by the API client for any non-2xx response. */
 export class BackendError extends Error {
+  /** Structured extras from v1 envelopes, e.g. { currentRevision, deleted }. */
+  public details: Record<string, unknown> | undefined;
+
   constructor(
     public readonly status: number,
     public readonly code: string,

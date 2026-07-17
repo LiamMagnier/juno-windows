@@ -32,23 +32,28 @@ export async function parseErrorEnvelope(res: Response): Promise<BackendError> {
   let message = `Request failed (${res.status})`;
   let retryable = res.status >= 500;
   let retryAfterMs: number | null = null;
+  let details: Record<string, unknown> | undefined;
   try {
     const body = (await res.json()) as Partial<ApiErrorEnvelope> & { error?: unknown };
     if (typeof body.error === "string") {
-      message = body.error;
-      const machine = (body as { code?: string }).code;
-      if (machine) code = machine;
+      // Legacy /api/* shape: { "error": "<human message>", "code"?, "message"? }
+      const legacy = body as { error: string; code?: string; message?: string };
+      message = legacy.message ?? legacy.error;
+      if (legacy.code) code = legacy.code;
     } else if (body.error && typeof body.error === "object") {
-      const env = body.error as ApiErrorEnvelope["error"];
+      const env = body.error as ApiErrorEnvelope["error"] & { details?: Record<string, unknown> };
       code = env.code ?? code;
       message = env.message ?? message;
       retryable = env.retryable ?? retryable;
       retryAfterMs = env.retryAfterMs ?? null;
+      details = env.details;
     }
   } catch {
     // non-JSON body; keep defaults
   }
-  return new BackendError(res.status, code, message, retryable, retryAfterMs);
+  const error = new BackendError(res.status, code, message, retryable, retryAfterMs);
+  error.details = details;
+  return error;
 }
 
 export function adoptTokens(tokens: RefreshResponse | TokenResponse): Promise<void> {
