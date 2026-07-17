@@ -15,6 +15,11 @@
   transition: width var(--dur-base) var(--ease-out-expo);
 }
 
+/* While dragging the resizer the width must track the cursor directly. */
+.shell[data-resizing] .shell-sidebar {
+  transition: none;
+}
+
 .shell-resizer {
   flex: 0 0 4px;
   margin-inline-start: -2px;

@@ -772,13 +772,19 @@
   background: hsl(var(--card));
 }
 
-.code-inspector-tabs {
+.code-inspector-tabbar {
   flex: none;
   display: flex;
   align-items: center;
   gap: 2px;
   padding: 8px;
   border-bottom: 1px solid hsl(var(--hairline));
+}
+
+.code-inspector-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .code-inspector-spacer {
@@ -1248,5 +1254,13 @@
 
   .code-picker-row[data-focused] {
     outline: 1px solid CanvasText;
+  }
+
+  /* Status dots convey state by color alone; keep their author colors so
+     they don't vanish into Canvas (permission mode / working indicator). */
+  .code-mode-dot,
+  .code-working-dot {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
   }
 }

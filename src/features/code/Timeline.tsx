@@ -72,7 +72,14 @@ export function CodeTimeline({
   }, [items, running]);
 
   return (
-    <div className="code-timeline-scroll" ref={scrollRef} onScroll={onScroll}>
+    <div
+      className="code-timeline-scroll"
+      role="log"
+      aria-label="Session activity"
+      tabIndex={0}
+      ref={scrollRef}
+      onScroll={onScroll}
+    >
       <div className="code-timeline-column">
         {items.length === 0 ? (
           <p className="code-timeline-empty">

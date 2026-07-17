@@ -7,7 +7,8 @@ import { Marked } from "marked";
 import DOMPurify from "dompurify";
 import hljs from "highlight.js/lib/common";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import "highlight.js/styles/github-dark.css";
+// Syntax token colors live in markdown.css, scoped to the app's light/dark
+// theme classes (the stock highlight.js stylesheets are single-theme).
 import "./markdown.css";
 
 const marked = new Marked({
@@ -20,7 +21,7 @@ const marked = new Marked({
         ? hljs.highlight(text, { language }).value
         : hljs.highlightAuto(text).value;
       const label = language ?? "";
-      return `<pre class="md-code" data-lang="${label}"><code class="hljs">${highlighted}</code></pre>`;
+      return `<pre class="md-code" data-lang="${label}"><button type="button" class="md-copy" aria-label="Copy code"></button><code class="hljs">${highlighted}</code></pre>`;
     },
   },
 });
@@ -33,7 +34,18 @@ DOMPurify.addHook("afterSanitizeAttributes", (node) => {
 });
 
 function onClickCapture(e: React.MouseEvent) {
-  const anchor = (e.target as HTMLElement).closest("a[data-external]");
+  const target = e.target as HTMLElement;
+  const copyBtn = target.closest("button.md-copy");
+  if (copyBtn) {
+    e.preventDefault();
+    const code = copyBtn.closest("pre.md-code")?.querySelector("code");
+    void navigator.clipboard.writeText(code?.textContent ?? "").then(() => {
+      copyBtn.setAttribute("data-copied", "true");
+      setTimeout(() => copyBtn.removeAttribute("data-copied"), 1500);
+    });
+    return;
+  }
+  const anchor = target.closest("a[data-external]");
   if (anchor) {
     e.preventDefault();
     const href = anchor.getAttribute("href");
@@ -51,9 +63,9 @@ export const Markdown = memo(function Markdown({ text }: { text: string }) {
         "em", "strong", "del", "s", "a", "img",
         "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6",
         "table", "thead", "tbody", "tr", "th", "td",
-        "sup", "sub", "input",
+        "sup", "sub", "input", "button",
       ],
-      ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "data-lang", "data-external", "type", "checked", "disabled", "start"],
+      ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "data-lang", "data-external", "type", "checked", "disabled", "start", "aria-label"],
       ALLOWED_URI_REGEXP: /^(?:https?:|data:image\/(?:png|jpe?g|gif|webp);base64,)/i,
     });
   }, [text]);

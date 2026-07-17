@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, FolderOpen, ShieldAlert } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
+import { registerOverlay } from "@/components/overlayStack";
 import type { ModelEntry } from "@/lib/data/entities";
 import type { PermissionMode } from "@/lib/code/types";
 import type { WorkspaceGrant } from "@/lib/code/host";
@@ -43,29 +44,37 @@ function CodePopover({
   width?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
+    const overlay = registerOverlay();
     const wrap = ref.current?.parentElement;
+    const close = () => onCloseRef.current();
     const onPointerDown = (e: PointerEvent) => {
-      if (wrap && !wrap.contains(e.target as Node)) onClose();
+      if (wrap && !wrap.contains(e.target as Node)) close();
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
+        // Only the top-most overlay handles Escape — an approval dialog above
+        // this popover must not be denied by the same keypress.
+        if (!overlay.isTop()) return;
+        e.stopImmediatePropagation();
+        close();
         wrap?.querySelector<HTMLElement>("button")?.focus();
       }
     };
     window.addEventListener("pointerdown", onPointerDown, true);
     window.addEventListener("keydown", onKeyDown, true);
-    window.addEventListener("blur", onClose);
+    window.addEventListener("blur", close);
     return () => {
+      overlay.unregister();
       window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("blur", onClose);
+      window.removeEventListener("blur", close);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

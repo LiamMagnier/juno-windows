@@ -78,6 +78,7 @@ export function MessageList({
   messages,
   modelId,
   onRegenerate,
+  onContinue,
 }: {
   threadKey: string;
   conversationId: string | null;
@@ -86,6 +87,7 @@ export function MessageList({
   messages: ClientMessage[];
   modelId: string | null;
   onRegenerate(): void;
+  onContinue(): void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
@@ -154,6 +156,7 @@ export function MessageList({
               status={status}
               busy={busy}
               onRegenerate={onRegenerate}
+              onContinue={onContinue}
             />
           ))}
         </div>
@@ -186,6 +189,7 @@ function MessageItem({
   status,
   busy,
   onRegenerate,
+  onContinue,
 }: {
   message: ClientMessage;
   threadKey: string;
@@ -198,6 +202,7 @@ function MessageItem({
   status: GenerationStatus;
   busy: boolean;
   onRegenerate(): void;
+  onContinue(): void;
 }) {
   const { open: openMenu } = useContextMenu();
   const [copied, setCopied] = useState(false);
@@ -252,11 +257,14 @@ function MessageItem({
 
   // ---- actions ----
   const copy = () => {
-    void navigator.clipboard.writeText(message.content).then(() => {
+    // Copy what's on screen: the paged-back version when one is displayed.
+    if (displayedContent === null) return;
+    void navigator.clipboard.writeText(displayedContent).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   };
+  const copyDisabled = viewingOld && displayedContent === null;
 
   const setFeedback = (value: "UP" | "DOWN") => {
     const next = message.feedback === value ? null : value;
@@ -292,6 +300,13 @@ function MessageItem({
   const canRegenerate =
     isAssistant && isLastAssistant && isLast && !privateMode && conversationId !== null && !busy;
   const canFeedback = isAssistant && !privateMode && conversationId !== null && !streaming;
+  const canContinue =
+    isAssistant &&
+    isLast &&
+    !busy &&
+    !privateMode &&
+    conversationId !== null &&
+    (message.finishReason === "length" || message.finishReason === "network_error");
 
   const contextItems = (): MenuItem[] => {
     const items: MenuItem[] = [
@@ -299,6 +314,7 @@ function MessageItem({
         id: "copy",
         label: "Copy",
         icon: <Copy size={14} aria-hidden />,
+        disabled: copyDisabled,
         onSelect: copy,
       },
     ];
@@ -342,6 +358,8 @@ function MessageItem({
               aria-label="Edit message"
               onChange={(e) => setEditText(e.target.value)}
               onKeyDown={(e) => {
+                // Never treat an IME conversion commit as a submit.
+                if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   void submitEdit();
@@ -392,6 +410,7 @@ function MessageItem({
             <ToolbarButton
               label={copied ? "Copied" : "Copy"}
               onClick={copy}
+              disabled={copyDisabled}
               icon={copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
             />
             {canEdit && !editing ? (
@@ -462,6 +481,11 @@ function MessageItem({
               <span className="chat-finish-badge">{finishLabel(message.finishReason)}</span>
             ) : null}
           </div>
+          {canContinue ? (
+            <button type="button" className="btn btn-secondary" onClick={onContinue}>
+              Continue
+            </button>
+          ) : null}
           {canRegenerate ? (
             <button type="button" className="btn btn-secondary" onClick={onRegenerate}>
               Retry
@@ -471,6 +495,11 @@ function MessageItem({
       ) : abnormalFinish && !streaming ? (
         <div className="chat-finish-note">
           <span className="chat-finish-badge">{finishLabel(message.finishReason!)}</span>
+          {canContinue ? (
+            <button type="button" className="btn btn-secondary" onClick={onContinue}>
+              Continue
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -483,6 +512,7 @@ function MessageItem({
             <ToolbarButton
               label={copied ? "Copied" : "Copy"}
               onClick={copy}
+              disabled={copyDisabled}
               icon={copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
             />
             {canFeedback ? (
@@ -534,11 +564,13 @@ function ToolbarButton({
   icon,
   onClick,
   pressed,
+  disabled,
 }: {
   label: string;
   icon: React.ReactNode;
   onClick(): void;
   pressed?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -548,6 +580,7 @@ function ToolbarButton({
       title={label}
       {...(pressed !== undefined ? { "aria-pressed": pressed } : {})}
       data-active={pressed || undefined}
+      disabled={disabled ?? false}
       onClick={onClick}
     >
       {icon}

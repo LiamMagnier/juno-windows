@@ -1,6 +1,6 @@
 /**
  * Windows-style context menu: right-click anchored, keyboard navigable,
- * Escape/blur dismiss, roving focus, destructive tint.
+ * Escape/Tab/blur dismiss, true roving focus on menu items, destructive tint.
  */
 import {
   createContext,
@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { registerOverlay } from "./overlayStack";
 import "./contextmenu.css";
 
 export interface MenuItem {
@@ -57,6 +58,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
 function MenuPopup({ menu, onClose }: { menu: MenuState; onClose(): void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [position, setPosition] = useState({ x: menu.x, y: menu.y });
   const [focusIndex, setFocusIndex] = useState(0);
   const enabled = menu.items.filter((i) => !i.disabled);
@@ -69,8 +71,27 @@ function MenuPopup({ menu, onClose }: { menu: MenuState; onClose(): void }) {
       x: Math.min(menu.x, window.innerWidth - rect.width - 8),
       y: Math.min(menu.y, window.innerHeight - rect.height - 8),
     });
-    el.focus();
+    setFocusIndex(0);
   }, [menu]);
+
+  // Escape layering + focus restoration: register on the overlay stack and
+  // hand focus back to whatever had it before the menu opened.
+  useEffect(() => {
+    const overlay = registerOverlay();
+    const previousFocus = document.activeElement as HTMLElement | null;
+    return () => {
+      overlay.unregister();
+      previousFocus?.focus();
+    };
+  }, []);
+
+  // True roving focus: DOM focus follows the highlighted menu item so screen
+  // readers announce each item as arrows (or hover) move the highlight.
+  useEffect(() => {
+    const item = itemRefs.current[focusIndex];
+    if (item) item.focus();
+    else ref.current?.focus();
+  }, [focusIndex, menu]);
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -89,6 +110,11 @@ function MenuPopup({ menu, onClose }: { menu: MenuState; onClose(): void }) {
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    } else if (e.key === "Tab") {
+      // Per the WAI-ARIA menu pattern, Tab dismisses the menu.
+      e.preventDefault();
       onClose();
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -96,13 +122,12 @@ function MenuPopup({ menu, onClose }: { menu: MenuState; onClose(): void }) {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setFocusIndex((i) => (i - 1 + enabled.length) % enabled.length);
-    } else if (e.key === "Enter" || e.key === " ") {
+    } else if (e.key === "Home") {
       e.preventDefault();
-      const item = enabled[focusIndex];
-      if (item) {
-        onClose();
-        item.onSelect();
-      }
+      setFocusIndex(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setFocusIndex(Math.max(0, enabled.length - 1));
     }
   };
 
@@ -116,15 +141,20 @@ function MenuPopup({ menu, onClose }: { menu: MenuState; onClose(): void }) {
       onKeyDown={onKeyDown}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {menu.items.map((item) => {
+      {menu.items.map((item, itemIndex) => {
         const enabledIndex = enabled.indexOf(item);
         return (
           <div key={item.id}>
             {item.separatorBefore ? <div className="context-menu-separator" role="separator" /> : null}
             <button
+              ref={(el) => {
+                if (enabledIndex >= 0) itemRefs.current[enabledIndex] = el;
+              }}
               type="button"
+              id={`context-menu-item-${itemIndex}`}
               role="menuitem"
               className="context-menu-item"
+              tabIndex={-1}
               data-destructive={item.destructive || undefined}
               data-focused={enabledIndex === focusIndex || undefined}
               disabled={item.disabled}

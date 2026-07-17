@@ -77,6 +77,46 @@
   font-size: 13px;
 }
 
+/* Per-block copy affordance (hover-revealed; the language eyebrow yields). */
+.markdown .md-code .md-copy {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 2px 8px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+
+.markdown .md-code:hover .md-copy,
+.markdown .md-code .md-copy:focus-visible,
+.markdown .md-code .md-copy[data-copied] {
+  opacity: 1;
+}
+
+.markdown .md-code:hover::before {
+  opacity: 0;
+}
+
+.markdown .md-code .md-copy:hover {
+  color: hsl(var(--foreground));
+  background: hsl(var(--hover-fill));
+}
+
+.markdown .md-code .md-copy::after {
+  content: "Copy";
+}
+
+.markdown .md-code .md-copy[data-copied]::after {
+  content: "Copied";
+}
+
 .markdown blockquote {
   border-inline-start: 3px solid hsl(var(--primary) / 0.4);
   padding-inline-start: 12px;
@@ -118,4 +158,192 @@
   border: none;
   border-top: 1px solid hsl(var(--hairline-strong));
   margin: 1em 0;
+}
+
+/* ---- highlight.js token colors -------------------------------------------
+ * Vendored from highlight.js github.css / github-dark.css so each palette is
+ * scoped to the app theme (the .dark root class). Backgrounds stay on our
+ * tokens via .md-code above.
+ */
+
+.markdown .hljs {
+  color: #24292e;
+}
+
+.markdown .hljs-doctag,
+.markdown .hljs-keyword,
+.markdown .hljs-meta .hljs-keyword,
+.markdown .hljs-template-tag,
+.markdown .hljs-template-variable,
+.markdown .hljs-type,
+.markdown .hljs-variable.language_ {
+  color: #d73a49;
+}
+
+.markdown .hljs-title,
+.markdown .hljs-title.class_,
+.markdown .hljs-title.class_.inherited__,
+.markdown .hljs-title.function_ {
+  color: #6f42c1;
+}
+
+.markdown .hljs-attr,
+.markdown .hljs-attribute,
+.markdown .hljs-literal,
+.markdown .hljs-meta,
+.markdown .hljs-number,
+.markdown .hljs-operator,
+.markdown .hljs-variable,
+.markdown .hljs-selector-attr,
+.markdown .hljs-selector-class,
+.markdown .hljs-selector-id {
+  color: #005cc5;
+}
+
+.markdown .hljs-regexp,
+.markdown .hljs-string,
+.markdown .hljs-meta .hljs-string {
+  color: #032f62;
+}
+
+.markdown .hljs-built_in,
+.markdown .hljs-symbol {
+  color: #e36209;
+}
+
+.markdown .hljs-comment,
+.markdown .hljs-code,
+.markdown .hljs-formula {
+  color: #6a737d;
+}
+
+.markdown .hljs-name,
+.markdown .hljs-quote,
+.markdown .hljs-selector-tag,
+.markdown .hljs-selector-pseudo {
+  color: #22863a;
+}
+
+.markdown .hljs-subst {
+  color: #24292e;
+}
+
+.markdown .hljs-section {
+  color: #005cc5;
+  font-weight: bold;
+}
+
+.markdown .hljs-bullet {
+  color: #735c0f;
+}
+
+.markdown .hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+
+.markdown .hljs-strong {
+  color: #24292e;
+  font-weight: bold;
+}
+
+.markdown .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.markdown .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+.dark .markdown .hljs {
+  color: #c9d1d9;
+}
+
+.dark .markdown .hljs-doctag,
+.dark .markdown .hljs-keyword,
+.dark .markdown .hljs-meta .hljs-keyword,
+.dark .markdown .hljs-template-tag,
+.dark .markdown .hljs-template-variable,
+.dark .markdown .hljs-type,
+.dark .markdown .hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+.dark .markdown .hljs-title,
+.dark .markdown .hljs-title.class_,
+.dark .markdown .hljs-title.class_.inherited__,
+.dark .markdown .hljs-title.function_ {
+  color: #d2a8ff;
+}
+
+.dark .markdown .hljs-attr,
+.dark .markdown .hljs-attribute,
+.dark .markdown .hljs-literal,
+.dark .markdown .hljs-meta,
+.dark .markdown .hljs-number,
+.dark .markdown .hljs-operator,
+.dark .markdown .hljs-variable,
+.dark .markdown .hljs-selector-attr,
+.dark .markdown .hljs-selector-class,
+.dark .markdown .hljs-selector-id {
+  color: #79c0ff;
+}
+
+.dark .markdown .hljs-regexp,
+.dark .markdown .hljs-string,
+.dark .markdown .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+
+.dark .markdown .hljs-built_in,
+.dark .markdown .hljs-symbol {
+  color: #ffa657;
+}
+
+.dark .markdown .hljs-comment,
+.dark .markdown .hljs-code,
+.dark .markdown .hljs-formula {
+  color: #8b949e;
+}
+
+.dark .markdown .hljs-name,
+.dark .markdown .hljs-quote,
+.dark .markdown .hljs-selector-tag,
+.dark .markdown .hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+.dark .markdown .hljs-subst {
+  color: #c9d1d9;
+}
+
+.dark .markdown .hljs-section {
+  color: #1f6feb;
+  font-weight: bold;
+}
+
+.dark .markdown .hljs-bullet {
+  color: #f2cc60;
+}
+
+.dark .markdown .hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+
+.dark .markdown .hljs-strong {
+  color: #c9d1d9;
+  font-weight: bold;
+}
+
+.dark .markdown .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.dark .markdown .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
 }

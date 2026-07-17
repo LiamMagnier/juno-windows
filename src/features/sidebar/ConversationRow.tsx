@@ -145,18 +145,33 @@ export function ConversationRow({
     menu.open(items, x, y);
   };
 
+  // Shift+F10 / the Menu key open the row's context menu at the row itself
+  // (standard Windows keyboard path to right-click actions).
+  const onMenuKeyDown = (e: React.KeyboardEvent) => {
+    if (renaming) return;
+    if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      openMenu(rect.left + 8, rect.bottom);
+    }
+  };
+
   const rowProps = option
     ? {
         role: "option" as const,
         "aria-selected": active,
         tabIndex: option.focusable ? 0 : -1,
         onFocus: option.onFocusRow,
+        onKeyDown: onMenuKeyDown,
         ref: option.registerRef,
       }
     : {
         tabIndex: 0,
         onKeyDown: (e: React.KeyboardEvent) => {
           if (renaming) return;
+          onMenuKeyDown(e);
+          if (e.defaultPrevented) return;
           if (e.key === "Enter") {
             e.preventDefault();
             openConversation(conversation.id);
@@ -170,9 +185,14 @@ export function ConversationRow({
         },
       };
 
+  // Name the row from its title alone (plus streaming state) so the overflow
+  // button's label doesn't pollute every announced option name.
+  const rowLabel = streaming ? `${conversation.title}, generating` : conversation.title;
+
   return (
     <div
       className="sidebar-convo"
+      aria-label={rowLabel}
       data-active={active || undefined}
       onClick={() => {
         if (!renaming) openConversation(conversation.id);
@@ -196,14 +216,15 @@ export function ConversationRow({
         <>
           <span className="sidebar-convo-title">{conversation.title}</span>
           {streaming ? (
-            <span className="sidebar-convo-dot" role="status" aria-label="Generating" />
+            <span className="sidebar-convo-dot" aria-hidden />
           ) : conversation.pinned ? (
             <Pin size={12} className="sidebar-convo-pin" aria-hidden />
           ) : null}
           <button
             type="button"
             className="sidebar-convo-menu"
-            aria-label="Conversation options"
+            title="Conversation options"
+            aria-hidden
             tabIndex={-1}
             onClick={(e) => {
               e.stopPropagation();
@@ -256,6 +277,8 @@ export function RenameInput({
       onBlur={commit}
       onKeyDown={(e) => {
         e.stopPropagation();
+        // Enter during IME composition commits the conversion, not the name.
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
         if (e.key === "Enter") {
           e.preventDefault();
           commit();

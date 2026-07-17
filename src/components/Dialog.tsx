@@ -1,6 +1,7 @@
 /** Modal dialog with focus trap, Escape dismiss, and acrylic scrim. */
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { registerOverlay } from "./overlayStack";
 import "./dialog.css";
 
 export function Dialog({
@@ -20,16 +21,23 @@ export function Dialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  // Keep onClose in a ref so the focus-trap effect depends on [open] only —
+  // inline onClose props would otherwise re-run it on every parent re-render,
+  // yanking focus back to the first control and corrupting focus restoration.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
+    const overlay = registerOverlay();
     previousFocus.current = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
     panel?.querySelector<HTMLElement>("input, textarea, button, select")?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
+        if (!overlay.isTop()) return;
+        e.stopImmediatePropagation();
+        onCloseRef.current();
       } else if (e.key === "Tab" && panel) {
         const focusables = Array.from(
           panel.querySelectorAll<HTMLElement>(
@@ -50,10 +58,11 @@ export function Dialog({
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
+      overlay.unregister();
       window.removeEventListener("keydown", onKeyDown, true);
       previousFocus.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

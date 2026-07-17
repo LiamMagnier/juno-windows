@@ -160,12 +160,12 @@ function CodeSidebarContent() {
           New session
         </button>
 
-        <div className="sidebar-nav" role="list" aria-label="Code sections">
+        <nav className="sidebar-nav" aria-label="Code sections">
           <button
             type="button"
-            role="listitem"
             className="sidebar-row"
             data-selected={view.kind === "pulls" || undefined}
+            aria-current={view.kind === "pulls" ? "page" : undefined}
             onClick={() => setView({ kind: "pulls" })}
           >
             <GitPullRequest size={16} aria-hidden />
@@ -173,7 +173,6 @@ function CodeSidebarContent() {
           </button>
           <button
             type="button"
-            role="listitem"
             className="sidebar-row"
             onClick={() => {
               setMode("chat");
@@ -185,7 +184,6 @@ function CodeSidebarContent() {
           </button>
           <button
             type="button"
-            role="listitem"
             className="sidebar-row"
             onClick={() => {
               setMode("chat");
@@ -195,7 +193,7 @@ function CodeSidebarContent() {
             <Plug size={16} aria-hidden />
             Connectors
           </button>
-        </div>
+        </nav>
 
         <SessionsList
           groups={groups}
@@ -491,11 +489,21 @@ function SessionRowView({
     menu.open(items, x, y);
   };
 
+  const optionLabel = [
+    title,
+    caption,
+    running ? "running" : null,
+    row.type === "remote" ? "on another device" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div
       className="sidebar-convo code-session-row"
       role="option"
       aria-selected={active}
+      aria-label={optionLabel}
       data-active={active || undefined}
       tabIndex={focusable ? 0 : -1}
       onFocus={onFocusRow}
@@ -527,15 +535,9 @@ function SessionRowView({
             <span className="sidebar-convo-title">{title}</span>
             <span className="code-session-caption">{caption}</span>
           </span>
-          {running ? (
-            <span className="sidebar-convo-dot" role="status" aria-label="Running" />
-          ) : null}
+          {running ? <span className="sidebar-convo-dot" aria-hidden /> : null}
           {row.type === "remote" ? (
-            <MonitorSmartphone
-              size={14}
-              className="code-session-device"
-              aria-label="On another device"
-            />
+            <MonitorSmartphone size={14} className="code-session-device" aria-hidden />
           ) : null}
         </>
       )}

@@ -6,7 +6,7 @@
 import type { ClientConversation } from "@/lib/data/entities";
 import { enqueueMutation } from "@/lib/data/mutationQueue";
 import { useDataStore } from "@/state/dataStore";
-import { useThreadStore } from "@/state/threadStore";
+import { emptyThread, useThreadStore } from "@/state/threadStore";
 import { useUiStore } from "@/state/uiStore";
 
 /** Show the chat pane (switching mode if needed) and select a conversation. */
@@ -14,14 +14,26 @@ export function openConversation(id: string): void {
   const ui = useUiStore.getState();
   if (ui.mode !== "chat") ui.setMode("chat");
   ui.setView({ kind: "chat" });
-  useThreadStore.getState().setActive(id);
+  const threads = useThreadStore.getState();
+  if (threads.privateMode) {
+    // Picking a saved conversation leaves private mode and discards the
+    // private transcript entirely.
+    threads.patchThread("private", { ...emptyThread });
+    threads.setPrivateMode(false);
+  }
+  threads.setActive(id);
 }
 
 export function startNewChat(): void {
   const ui = useUiStore.getState();
   if (ui.mode !== "chat") ui.setMode("chat");
   ui.setView({ kind: "chat" });
-  useThreadStore.getState().setActive(null);
+  const threads = useThreadStore.getState();
+  if (threads.privateMode) {
+    // "New chat" inside private mode resets the transcript but stays private.
+    threads.patchThread("private", { ...emptyThread });
+  }
+  threads.setActive(null);
 }
 
 export function renameConversation(conversation: ClientConversation, title: string): void {

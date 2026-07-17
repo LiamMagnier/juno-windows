@@ -512,6 +512,8 @@
 
 .chat-finish-note {
   display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .chat-inline-error {
@@ -597,6 +599,15 @@
 
 .chat-quota-bar > svg {
   color: hsl(var(--warning));
+}
+
+.chat-quota-bar > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-quota-bar > .btn {
+  flex-shrink: 0;
 }
 
 .chat-private-banner {
@@ -1262,6 +1273,27 @@
   .chat-composer,
   .chat-user-bubble,
   .chat-error-card {
+    border: 1px solid CanvasText;
+  }
+
+  /* Keyboard highlight in the model picker is a background fill that forced
+     colors strips — outline the row aria-activedescendant points at. */
+  .chat-model-row[data-focused] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  /* Composer toggles (web search / private mode / connectors) convey their
+     on-state by tint alone — give the active state a visible outline. */
+  .chat-control-toggle[data-active] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  /* The pricing-class dot is a pure color swatch; keep its author color so
+     it doesn't vanish into Canvas. */
+  .chat-price-dot {
+    forced-color-adjust: none;
     border: 1px solid CanvasText;
   }
 }

@@ -4,7 +4,7 @@
  * captions (or a one-line state label), and the session controls
  * (mute / interrupt / captions / end), plus ended and error layouts.
  */
-import type { CSSProperties, KeyboardEvent } from "react";
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
 import {
   Captions,
   CircleStop,
@@ -57,6 +57,20 @@ const ORB_ICONS: Record<OrbState, typeof Mic> = {
   ended: PhoneOff,
 };
 
+/** Live prefers-reduced-motion flag (reacts to OS setting changes). */
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
 function stateLabel(phase: VoicePhase, muted: boolean): string {
   switch (phase) {
     case "connecting":
@@ -89,18 +103,24 @@ export function VoicePanel() {
   const toggleCaptions = useVoiceStore((s) => s.toggleCaptions);
   const interrupt = useVoiceStore((s) => s.interrupt);
   const activeConversationId = useThreadStore((s) => s.activeConversationId);
+  const reducedMotion = useReducedMotion();
 
   if (phase === "idle") return null;
 
   const state = orbState(phase, muted);
   const OrbIcon = ORB_ICONS[state];
   const live = phase !== "ended" && phase !== "error";
-  const animated = state === "listening" || state === "speaking";
+  // The amplitude-driven pulse is JS-set inline style, so the global CSS
+  // reduced-motion collapse can't stop it — gate it here (state is still
+  // conveyed by icon + text label).
+  const animated = !reducedMotion && (state === "listening" || state === "speaking");
   const scale = animated ? 1 + amplitude * 0.35 : 1;
-  const orbStyle = {
-    transform: `scale(${scale.toFixed(3)})`,
-    "--orb-glow": (0.25 + amplitude * 0.5).toFixed(3),
-  } as CSSProperties;
+  const orbStyle: CSSProperties | undefined = reducedMotion
+    ? undefined
+    : ({
+        transform: `scale(${scale.toFixed(3)})`,
+        "--orb-glow": (0.25 + amplitude * 0.5).toFixed(3),
+      } as CSSProperties);
 
   const lastAssistantFinal = [...captions]
     .reverse()

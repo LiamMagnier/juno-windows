@@ -49,24 +49,55 @@ export function Inspector({
 }) {
   const tab = useCodeViewStore((s) => s.inspectorTab);
   const setTab = useCodeViewStore((s) => s.setInspectorTab);
+  const tabRefs = useRef(new Map<InspectorTab, HTMLButtonElement>());
+
+  // Tablist keyboard pattern: one tab stop, arrows/Home/End move + activate.
+  const onTablistKeyDown = (e: React.KeyboardEvent) => {
+    const current = TABS.findIndex((t) => t.id === tab);
+    let next: number | null = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") next = (current + 1) % TABS.length;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      next = (current - 1 + TABS.length) % TABS.length;
+    } else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = TABS.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    const target = TABS[next]!;
+    setTab(target.id);
+    tabRefs.current.get(target.id)?.focus();
+  };
 
   return (
     <aside className="code-inspector" aria-label="Session inspector">
-      <div className="code-inspector-tabs" role="tablist" aria-label="Inspector panels">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            aria-label={t.label}
-            title={t.label}
-            className="code-inspector-tab"
-            onClick={() => setTab(t.id)}
-          >
-            {t.icon}
-          </button>
-        ))}
+      <div className="code-inspector-tabbar">
+        <div
+          className="code-inspector-tabs"
+          role="tablist"
+          aria-label="Inspector panels"
+          onKeyDown={onTablistKeyDown}
+        >
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              ref={(el) => {
+                if (el) tabRefs.current.set(t.id, el);
+                else tabRefs.current.delete(t.id);
+              }}
+              type="button"
+              role="tab"
+              id={`code-inspector-tab-${t.id}`}
+              aria-selected={tab === t.id}
+              aria-controls="code-inspector-panel"
+              aria-label={t.label}
+              title={t.label}
+              tabIndex={tab === t.id ? 0 : -1}
+              className="code-inspector-tab"
+              onClick={() => setTab(t.id)}
+            >
+              {t.icon}
+            </button>
+          ))}
+        </div>
         <span className="code-inspector-spacer" />
         <button
           type="button"
@@ -78,7 +109,12 @@ export function Inspector({
           <X size={16} aria-hidden />
         </button>
       </div>
-      <div className="code-inspector-body" role="tabpanel" aria-label={tab}>
+      <div
+        className="code-inspector-body"
+        role="tabpanel"
+        id="code-inspector-panel"
+        aria-labelledby={`code-inspector-tab-${tab}`}
+      >
         {tab === "changes" ? <ChangesPanel meta={meta} timeline={timeline} running={running} /> : null}
         {tab === "diff" ? <DiffPanel meta={meta} running={running} /> : null}
         {tab === "terminal" ? <TerminalPanel timeline={timeline} /> : null}

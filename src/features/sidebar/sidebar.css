@@ -691,4 +691,19 @@
   .sidebar-rail-btn[data-selected] {
     outline: 1px solid CanvasText;
   }
+
+  /* Keyboard highlight in the Ctrl+K palette is a background fill that
+     forced colors strips — mark the active row with a visible outline. */
+  .sidebar-palette-item[data-active] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  /* Streaming / sync dots convey state by color alone; keep their author
+     colors so they don't vanish into Canvas. */
+  .sidebar-convo-dot,
+  .sidebar-sync-dot {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
 }

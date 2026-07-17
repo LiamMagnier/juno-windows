@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useUiStore, SIDEBAR_COMPACT } from "@/state/uiStore";
-import { useThreadStore } from "@/state/threadStore";
+import { useCodeStore } from "@/state/codeStore";
 import { setPendingProjectId } from "@/features/projects/projectContext";
+import { startNewChat } from "@/features/sidebar/conversationActions";
 import { startSync, stopSync } from "@/lib/data/syncEngine";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import { MainPane } from "@/features/main/MainPane";
 import { SettingsDialog } from "@/features/settings/SettingsDialog";
 import { ContextMenuProvider } from "@/components/ContextMenu";
+import { hasOpenOverlay } from "@/components/overlayStack";
 import "./shell.css";
 
 /**
@@ -27,6 +29,15 @@ export function Shell() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Overlays (settings, confirms, palettes, context menus) own the
+      // keyboard while open — global shortcuts must not act behind them.
+      // The DOM query is a fallback for overlays that don't register.
+      if (
+        hasOpenOverlay() ||
+        document.querySelector('[aria-modal="true"], [role="menu"]')
+      ) {
+        return;
+      }
       if (e.ctrlKey && !e.shiftKey && !e.altKey) {
         if (e.key === "1") {
           e.preventDefault();
@@ -42,8 +53,12 @@ export function Shell() {
           // A stashed "new chat in project" target must not leak into a
           // plain Ctrl+N chat.
           setPendingProjectId(null);
-          useUiStore.getState().setView({ kind: "chat" });
-          useThreadStore.getState().setActive(null);
+          if (useUiStore.getState().mode === "code") {
+            // In Code mode, "new" means the new-session composer.
+            useCodeStore.setState({ activeSessionId: null });
+          } else {
+            startNewChat();
+          }
         } else if (e.key === ",") {
           e.preventDefault();
           useUiStore.getState().openSettings(true);
@@ -63,6 +78,9 @@ export function Shell() {
       if (sidebarCollapsed) return;
       dragState.current = { startX: e.clientX, startWidth: sidebarWidth };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      // The width transition is for collapse/expand only — during a drag it
+      // would rubber-band the sidebar behind the cursor.
+      shellRef.current?.setAttribute("data-resizing", "true");
     },
     [sidebarCollapsed, sidebarWidth],
   );
@@ -78,6 +96,7 @@ export function Shell() {
 
   const onResizeEnd = useCallback(() => {
     dragState.current = null;
+    shellRef.current?.removeAttribute("data-resizing");
   }, []);
 
   const width = sidebarCollapsed ? SIDEBAR_COMPACT : sidebarWidth;
@@ -102,6 +121,7 @@ export function Shell() {
         onPointerDown={onResizeStart}
         onPointerMove={onResizeMove}
         onPointerUp={onResizeEnd}
+        onPointerCancel={onResizeEnd}
         onKeyDown={(e) => {
           if (e.key === "ArrowLeft") setSidebarWidth(sidebarWidth - 16);
           if (e.key === "ArrowRight") setSidebarWidth(sidebarWidth + 16);

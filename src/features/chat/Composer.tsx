@@ -34,6 +34,7 @@ import { uploadByPath, uploadBytes } from "@/lib/data/uploads";
 import { sendMessage, stopGeneration, type SendOptions } from "@/lib/chat/chatEngine";
 import { enqueueMutation } from "@/lib/data/mutationQueue";
 import { useDataStore } from "@/state/dataStore";
+import { useUiStore } from "@/state/uiStore";
 import { emptyThread, useThreadStore, type GenerationStatus } from "@/state/threadStore";
 import { useVoiceStore } from "@/state/voiceStore";
 import { VoicePanel } from "@/features/voice/VoicePanel";
@@ -337,6 +338,8 @@ export function Composer({
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // IME users commit conversions with Enter — never send mid-composition.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (canSend) void send(draft);
@@ -400,6 +403,13 @@ export function Composer({
         <div className="chat-quota-bar" role="status">
           <Sparkles size={14} aria-hidden />
           <span>You've reached your plan limit. Upgrade your plan to keep chatting.</span>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => useUiStore.getState().openSettings(true)}
+          >
+            Open plan settings
+          </button>
         </div>
       ) : null}
 

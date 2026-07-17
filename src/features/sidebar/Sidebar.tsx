@@ -3,7 +3,7 @@
  * nav rows, folders, date-grouped conversations, account footer.
  * Code mode renders the CodeSidebarSlot placeholder.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Brain,
   Clock,
@@ -71,6 +71,31 @@ const NAV_ROWS: NavRow[] = [
 export function Sidebar({ mode, collapsed }: { mode: AppMode; collapsed: boolean }) {
   const setMode = useUiStore((s) => s.setMode);
   const [searchOpen, setSearchOpen] = useState(false);
+  const chatTabRef = useRef<HTMLButtonElement>(null);
+  const codeTabRef = useRef<HTMLButtonElement>(null);
+
+  // Tablist keyboard pattern: arrows move between the two mode tabs.
+  const switchMode = (next: AppMode) => {
+    setMode(next);
+    (next === "chat" ? chatTabRef : codeTabRef).current?.focus();
+  };
+  const onModeKeyDown = (e: React.KeyboardEvent) => {
+    if (
+      e.key === "ArrowRight" ||
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowDown" ||
+      e.key === "ArrowUp"
+    ) {
+      e.preventDefault();
+      switchMode(mode === "chat" ? "code" : "chat");
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      switchMode("chat");
+    } else if (e.key === "End") {
+      e.preventDefault();
+      switchMode("code");
+    }
+  };
 
   // Global Ctrl+K toggles the search palette.
   useEffect(() => {
@@ -86,24 +111,33 @@ export function Sidebar({ mode, collapsed }: { mode: AppMode; collapsed: boolean
 
   return (
     <div className="sidebar" data-collapsed={collapsed || undefined}>
-      <div className="sidebar-modes" role="tablist" aria-label="App mode">
+      <div
+        className="sidebar-modes"
+        role="tablist"
+        aria-label="App mode"
+        onKeyDown={onModeKeyDown}
+      >
         <button
+          ref={chatTabRef}
           type="button"
           role="tab"
           aria-selected={mode === "chat"}
           aria-label="Chat"
           title={collapsed ? "Chat" : undefined}
+          tabIndex={mode === "chat" ? 0 : -1}
           className="sidebar-mode"
           onClick={() => setMode("chat")}
         >
           {collapsed ? <MessageSquare size={16} aria-hidden /> : "Chat"}
         </button>
         <button
+          ref={codeTabRef}
           type="button"
           role="tab"
           aria-selected={mode === "code"}
           aria-label="Code"
           title={collapsed ? "Code" : undefined}
+          tabIndex={mode === "code" ? 0 : -1}
           className="sidebar-mode"
           onClick={() => setMode("code")}
         >
@@ -157,6 +191,7 @@ function CollapsedRail({ onOpenSearch }: { onOpenSearch(): void }) {
           aria-label={row.label}
           title={row.label}
           data-selected={row.selected(view) || undefined}
+          aria-current={row.selected(view) ? "page" : undefined}
           onClick={() => setView(row.view)}
         >
           {row.icon}
@@ -207,21 +242,21 @@ function ChatSidebarContent({ onOpenSearch }: { onOpenSearch(): void }) {
           <kbd className="sidebar-kbd">Ctrl+K</kbd>
         </button>
 
-        <div className="sidebar-nav" role="list" aria-label="Sections">
+        <nav className="sidebar-nav" aria-label="Sections">
           {NAV_ROWS.map((row) => (
             <button
               key={row.key}
               type="button"
-              role="listitem"
               className="sidebar-row"
               data-selected={row.selected(view) || undefined}
+              aria-current={row.selected(view) ? "page" : undefined}
               onClick={() => setView(row.view)}
             >
               {row.icon}
               {row.label}
             </button>
           ))}
-        </div>
+        </nav>
 
         <FoldersSection
           activeId={activeId}

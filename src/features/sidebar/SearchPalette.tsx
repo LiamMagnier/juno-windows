@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LoaderCircle, Search } from "lucide-react";
+import { registerOverlay } from "@/components/overlayStack";
 import { api } from "@/lib/backend/http";
 import type { ClientConversation, ProjectSummary } from "@/lib/data/entities";
 import { useDataStore } from "@/state/dataStore";
@@ -29,6 +30,7 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose(): voi
   const [activeIndex, setActiveIndex] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
 
   const conversations = useDataStore((s) => s.conversations);
   const projects = useDataStore((s) => s.projects);
@@ -68,6 +70,18 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose(): voi
     } else {
       abortRef.current?.abort();
     }
+  }, [open]);
+
+  // aria-modal promises the rest of the app is inert: register on the overlay
+  // stack and restore focus to the trigger element when the palette closes.
+  useEffect(() => {
+    if (!open) return;
+    const overlay = registerOverlay();
+    const previousFocus = document.activeElement as HTMLElement | null;
+    return () => {
+      overlay.unregister();
+      previousFocus?.focus();
+    };
   }, [open]);
 
   // Debounced server query.
@@ -143,6 +157,29 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose(): voi
       e.preventDefault();
       const item = items[clampedActive];
       if (item) select(item);
+    } else if (e.key === "Tab") {
+      // Focus trap: cycle within the palette instead of tabbing behind the
+      // scrim into content aria-modal declares inert.
+      const root = paletteRef.current;
+      if (!root) return;
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          "button, [href], input, textarea, select, [tabindex]:not([tabindex='-1'])",
+        ),
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0]!;
+      const last = focusables[focusables.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   };
 
@@ -177,6 +214,7 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose(): voi
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        ref={paletteRef}
         className="sidebar-palette"
         role="dialog"
         aria-modal="true"

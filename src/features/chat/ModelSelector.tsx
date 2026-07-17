@@ -184,12 +184,28 @@ function ModelRow({
   const gate = gateModel(model, plan);
   const vision = model.modalities.input.includes("image");
 
+  // Screen-reader label: capabilities and pricing class are otherwise conveyed
+  // only by aria-hidden icons and a color dot.
+  const rowLabel = [
+    model.displayName,
+    vision ? "vision" : null,
+    model.capabilities.webSearch ? "web search" : null,
+    model.reasoning.supported ? "reasoning" : null,
+    `${model.pricing.class} pricing`,
+    model.lifecycle === "legacy" ? "legacy" : null,
+    model.lifecycle === "deprecated" ? "deprecated" : null,
+    gate.reason ?? null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(", ");
+
   return (
     <div
       id={`chat-model-${model.id}`}
       className="chat-model-row"
       role="option"
       aria-selected={selected}
+      aria-label={rowLabel}
       aria-disabled={!gate.selectable || undefined}
       data-row-index={index}
       data-focused={focused || undefined}

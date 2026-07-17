@@ -73,6 +73,27 @@ export function ChatView() {
     });
   }, [conversationId, modelId, models, threadKey, conversation?.activeConnectors]);
 
+  // Continue pill for length / network_error finishes: a plain follow-up
+  // send with the same options as a regenerate.
+  const handleContinue = useCallback(() => {
+    if (!conversationId || !modelId) return;
+    const prefs = useChatPrefs.getState();
+    const model = models.find((m) => m.id === modelId);
+    const stored = prefs.effortByModel[modelId];
+    const effort =
+      stored === EFFORT_NONE ? null : (stored ?? (model ? defaultEffort(model) : null));
+    const connectors =
+      prefs.connectorsByThread[threadKey] ?? conversation?.activeConnectors ?? [];
+    void sendMessage({
+      conversationId,
+      message: "Continue from where you left off.",
+      model: modelId,
+      ...(model?.capabilities.webSearch ? { webSearch: prefs.webSearch } : {}),
+      ...(effort ? { reasoningEffort: effort } : {}),
+      connectors: connectors.slice(0, 5),
+    });
+  }, [conversationId, modelId, models, threadKey, conversation?.activeConnectors]);
+
   const messages = thread?.messages ?? [];
   const artifacts = thread?.artifacts ?? [];
   const status = thread?.status ?? "idle";
@@ -147,6 +168,7 @@ export function ChatView() {
               messages={messages}
               modelId={modelId}
               onRegenerate={handleRegenerate}
+              onContinue={handleContinue}
             />
             <div className="chat-composer-wrap">{composer}</div>
           </>

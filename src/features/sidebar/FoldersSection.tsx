@@ -155,6 +155,11 @@ export function FoldersSection({
                 } else if (e.key === "Delete") {
                   e.preventDefault();
                   setPendingDelete(folder);
+                } else if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
+                  // Keyboard path to the right-click actions.
+                  e.preventDefault();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  openFolderMenu(folder, rect.left + 8, rect.bottom);
                 }
               }}
             >

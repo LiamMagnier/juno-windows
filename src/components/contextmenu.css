@@ -67,4 +67,11 @@
   .context-menu {
     border: 1px solid CanvasText;
   }
+
+  /* The roving highlight is a background fill that forced colors strips —
+     outline the focused item so arrow-key navigation stays visible. */
+  .context-menu-item[data-focused] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
 }

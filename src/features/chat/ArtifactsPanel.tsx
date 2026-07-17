@@ -183,7 +183,8 @@ function ArtifactViewer({ artifact }: { artifact: ClientArtifact }) {
         <iframe
           className="chat-artifact-frame"
           title={artifact.title || "Artifact preview"}
-          sandbox="allow-scripts"
+          // Scripts run only in HTML/React previews; SVG renders script-free.
+          sandbox={artifact.type.toUpperCase() === "SVG" ? "" : "allow-scripts"}
           srcDoc={srcDoc}
         />
       ) : (
