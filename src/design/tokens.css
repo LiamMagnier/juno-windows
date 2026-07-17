@@ -1,7 +1,171 @@
-/* Juno design tokens — Windows adaptation. Populated fully in the design-system milestone. */
+/*
+ * Juno design tokens — Windows adaptation.
+ *
+ * The shared Juno language (warm graphite dark / warm paper light, one
+ * terracotta accent, soft radii, quiet motion) translated to Fluent idioms:
+ * Segoe UI Variable working type, a 4px spacing grid, restrained material,
+ * and Windows interaction states (hover/pressed fills, focus ring).
+ *
+ * Sources: juno/src/app/globals.css (web) and
+ * juno-app/Juno/DesignSystem/Theme.swift (native graphite levels).
+ * Colors are HSL triplets consumed as hsl(var(--token) / alpha).
+ */
+
 :root {
+  color-scheme: light;
+
+  /* ---- Surfaces (light: warm paper) ---- */
+  --background: 40 20% 98%;
+  --foreground: 30 8% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 30 8% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 8% 13%;
+  --secondary: 40 14% 95%;
+  --secondary-foreground: 30 8% 18%;
+  --muted: 40 14% 95%;
+  --muted-foreground: 35 5% 44%;
+  --accent-surface: 40 18% 93%;
+  --accent-surface-foreground: 30 8% 18%;
+
+  /* ---- Accent (terracotta default; swappable via [data-accent]) ---- */
+  --primary: 15 56% 49%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 15 56% 49%;
+
+  /* ---- Status ---- */
+  --destructive: 4 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 150 45% 38%;
+  --success-foreground: 0 0% 100%;
+  --warning: 36 70% 46%;
+  --source: 190 60% 36%;
+  --ultra: 258 90% 66%;
+
+  /* ---- Lines & fills ---- */
+  --border: 30 8% 13% / 0.08;
+  --input-border: 30 8% 13% / 0.10;
+  --hairline: 30 8% 13% / 0.07;
+  --hairline-strong: 30 8% 13% / 0.12;
+  --hover-fill: 30 8% 13% / 0.04;
+  --press-fill: 30 8% 13% / 0.07;
+
+  /* ---- Sidebar ---- */
+  --sidebar: 40 22% 97%;
+  --sidebar-foreground: 35 6% 34%;
+  --sidebar-border: 30 8% 13% / 0.07;
+  --sidebar-accent: 40 18% 92%;
+
+  /* ---- Titlebar / window chrome ---- */
+  --titlebar: 40 22% 97%;
+  --caption-hover: 30 8% 13% / 0.06;
+  --caption-press: 30 8% 13% / 0.10;
+
+  /* ---- Typography (Segoe UI Variable; optical sizes per Fluent) ---- */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-serif: "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-mono: "Cascadia Code", "Cascadia Mono", Consolas, "Courier New", monospace;
+  --text-caption: 12px;
+  --text-body: 14px;
+  --text-body-lg: 16px;
+  --text-subtitle: 20px;
+  --text-title: 28px;
+  --text-greeting: 32px;
+
+  /* ---- Geometry (4px grid; Windows-restrained radii) ---- */
+  --radius-control: 6px;
+  --radius-card: 12px;
+  --radius-float: 16px;
+  --radius-full: 999px;
+
+  /* ---- Elevation (warm, low-throw in light) ---- */
+  --shadow-soft: 0 1px 2px hsl(30 10% 20% / 0.05), 0 4px 12px -4px hsl(30 10% 20% / 0.08);
+  --shadow-float: 0 4px 14px -4px hsl(30 10% 16% / 0.12), 0 14px 36px -10px hsl(30 10% 16% / 0.14), inset 0 1px 0 hsl(0 0% 100% / 0.65);
+  --shadow-pop: 0 1px 1px hsl(30 12% 18% / 0.05), 0 2px 4px -1px hsl(30 12% 18% / 0.09), 0 8px 18px -8px hsl(30 12% 18% / 0.12);
+  --well-inset: inset 0 1px 2px hsl(30 12% 18% / 0.07);
+
+  /* ---- Motion (shared Juno curves; fast + functional) ---- */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+}
+
+.dark {
   color-scheme: dark;
-  --bg-app: #131315;
-  --fg-primary: #ececec;
-  --accent: #c96f4a;
+
+  /* ---- Surfaces (graphite levels from the native theme) ---- */
+  --background: 30 6% 6%;
+  --foreground: 40 14% 92%;
+  --card: 32 5% 13%;
+  --card-foreground: 40 14% 92%;
+  --popover: 32 5% 17%;
+  --popover-foreground: 40 14% 92%;
+  --secondary: 32 5% 10%;
+  --secondary-foreground: 40 12% 90%;
+  --muted: 32 4% 10%;
+  --muted-foreground: 38 6% 58%;
+  --accent-surface: 32 5% 9%;
+  --accent-surface-foreground: 40 12% 90%;
+
+  --primary: 14 70% 58%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 14 70% 58%;
+
+  --destructive: 6 66% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 150 42% 52%;
+  --success-foreground: 30 6% 6%;
+  --warning: 38 78% 58%;
+  --source: 190 55% 56%;
+  --ultra: 258 92% 74%;
+
+  --border: 0 0% 100% / 0.09;
+  --input-border: 0 0% 100% / 0.12;
+  --hairline: 0 0% 100% / 0.07;
+  --hairline-strong: 0 0% 100% / 0.13;
+  --hover-fill: 0 0% 100% / 0.05;
+  --press-fill: 0 0% 100% / 0.08;
+
+  --sidebar: 30 6% 6%;
+  --sidebar-foreground: 38 6% 62%;
+  --sidebar-border: 0 0% 100% / 0.07;
+  --sidebar-accent: 32 5% 13%;
+
+  --titlebar: 30 6% 6%;
+  --caption-hover: 0 0% 100% / 0.06;
+  --caption-press: 0 0% 100% / 0.10;
+
+  --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
+  --shadow-float: 0 4px 16px -4px hsl(0 0% 0% / 0.45), 0 16px 40px -12px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(40 14% 92% / 0.06);
+  --shadow-pop: 0 1px 2px hsl(0 0% 0% / 0.4), 0 3px 8px -2px hsl(0 0% 0% / 0.5), 0 10px 22px -10px hsl(0 0% 0% / 0.5);
+  --well-inset: inset 0 1px 2px hsl(0 0% 0% / 0.38);
+}
+
+/* ---- Accent variants (synced with the account's accent setting) ---- */
+:root[data-accent="teal"] { --primary: 182 58% 33%; --ring: 182 58% 33%; }
+.dark[data-accent="teal"] { --primary: 186 62% 52%; --ring: 186 62% 52%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="violet"] { --primary: 250 56% 60%; --ring: 250 56% 60%; }
+.dark[data-accent="violet"] { --primary: 252 76% 72%; --ring: 252 76% 72%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="amber"] { --primary: 33 82% 50%; --ring: 33 82% 50%; --primary-foreground: 30 45% 10%; }
+.dark[data-accent="amber"] { --primary: 38 86% 60%; --ring: 38 86% 60%; --primary-foreground: 30 45% 10%; }
+:root[data-accent="sage"] { --primary: 130 26% 42%; --ring: 130 26% 42%; }
+.dark[data-accent="sage"] { --primary: 132 32% 58%; --ring: 132 32% 58%; --primary-foreground: 40 6% 10%; }
+
+/*
+ * Windows high contrast (forced colors): hand control to the system palette.
+ * Custom fills/shadows are dropped; system colors take over. Components keep
+ * borders + focus outlines so structure survives.
+ */
+@media (forced-colors: active) {
+  :root,
+  .dark {
+    --shadow-soft: none;
+    --shadow-float: none;
+    --shadow-pop: none;
+    --well-inset: none;
+  }
 }

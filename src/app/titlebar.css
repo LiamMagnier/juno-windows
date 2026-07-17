@@ -1,0 +1,70 @@
+.titlebar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  height: 32px;
+  flex: 0 0 32px;
+  background: hsl(var(--titlebar));
+  -webkit-app-region: drag;
+}
+
+.titlebar-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline-start: 14px;
+  min-width: 0;
+}
+
+.titlebar-title {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: hsl(var(--sidebar-foreground));
+  letter-spacing: 0.01em;
+}
+
+.titlebar-captions {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.caption-button {
+  width: 46px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--foreground) / 0.78);
+  transition: background var(--dur-fast) var(--ease-out-soft);
+}
+
+.caption-button:hover {
+  background: hsl(var(--caption-hover));
+  color: hsl(var(--foreground));
+}
+
+.caption-button:active {
+  background: hsl(var(--caption-press));
+}
+
+.caption-close:hover {
+  background: #c42b1c;
+  color: #ffffff;
+}
+
+.caption-close:active {
+  background: #b22a1b;
+  color: hsl(0 0% 100% / 0.8);
+}
+
+/* Caption buttons must not show the rounded focus ring — square zones. */
+.caption-button:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+@media (forced-colors: active) {
+  .titlebar {
+    border-bottom: 1px solid CanvasText;
+  }
+}

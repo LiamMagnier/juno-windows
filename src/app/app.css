@@ -1,0 +1,11 @@
+.app-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.app-restoring {
+  flex: 1;
+  background: hsl(var(--background));
+}

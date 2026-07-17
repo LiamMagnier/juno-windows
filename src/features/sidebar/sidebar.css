@@ -1,0 +1,42 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  padding: 8px;
+  gap: 8px;
+}
+
+.sidebar-modes {
+  display: flex;
+  gap: 2px;
+  background: hsl(var(--press-fill));
+  border-radius: var(--radius-control);
+  padding: 2px;
+}
+
+.sidebar-mode {
+  flex: 1;
+  padding: 5px 10px;
+  border-radius: calc(var(--radius-control) - 2px);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: hsl(var(--sidebar-foreground));
+  transition: background var(--dur-fast) var(--ease-out-soft);
+}
+
+.sidebar-mode:hover {
+  background: hsl(var(--hover-fill));
+}
+
+.sidebar-mode[aria-selected="true"] {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow: var(--shadow-soft);
+}
+
+.sidebar-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}

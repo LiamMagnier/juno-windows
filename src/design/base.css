@@ -2,6 +2,7 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  border-color: hsl(var(--border));
 }
 
 html,
@@ -12,15 +13,119 @@ body,
 }
 
 body {
-  background: var(--bg-app);
-  color: var(--fg-primary);
-  font-family:
-    "Segoe UI Variable Text",
-    "Segoe UI",
-    system-ui,
-    sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow: hidden;
   user-select: none;
   cursor: default;
+}
+
+/* Text content areas opt back into selection. */
+.selectable,
+.selectable * {
+  user-select: text;
+  cursor: auto;
+}
+
+::selection {
+  background-color: hsl(var(--primary) / 0.25);
+  color: hsl(var(--foreground));
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+a {
+  color: hsl(var(--primary));
+}
+
+/* ---- Focus: Windows-style visible ring, keyboard only ---- */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+  border-radius: var(--radius-control);
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+  }
+}
+
+/* ---- Scrollbars: thin, quiet, Windows-overlay feel ---- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--foreground) / 0.18);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.32);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ---- Reduced motion: collapse all animation to instants ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Screen-reader-only utility. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
