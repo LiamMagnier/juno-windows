@@ -1,4 +1,5 @@
 mod error;
+mod host;
 mod secrets;
 
 use tauri::{Emitter, Manager};
@@ -70,6 +71,7 @@ pub fn run() {
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,
+            host::host_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -51,7 +51,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["juno"]
+        "schemes": ["com.liammagnier.juno", "juno"]
       }
     },
     "updater": {
