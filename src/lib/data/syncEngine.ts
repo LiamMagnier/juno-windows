@@ -7,8 +7,8 @@
  * window focus + after local writes.
  */
 import { api } from "../backend/http";
-import { dbGet, dbPut, dbReplaceAll, dbWipe } from "./db";
-import { flushQueue, onQueueDrained } from "./mutationQueue";
+import { dbGet, dbPut, dbWipe } from "./db";
+import { clearMutationQueue, flushQueue, onQueueDrained } from "./mutationQueue";
 import { useDataStore } from "@/state/dataStore";
 import type {
   BootstrapResponse,
@@ -119,6 +119,10 @@ async function applyBootstrap(bootstrap: BootstrapResponse): Promise<void> {
   store.setSubscription(bootstrap.subscription);
   const snapshot = (await dbGet<Record<string, unknown>>("meta", "snapshot")) ?? {};
   await dbPut("meta", "snapshot", { ...snapshot, bootstrap });
+  // Mid-session manifest staleness: refetch when the server's version moved.
+  if (store.manifest && store.manifest.manifestVersion !== bootstrap.modelManifestVersion) {
+    await fetchManifest().catch(() => {});
+  }
 }
 
 /**
@@ -196,13 +200,10 @@ export async function pullChanges(): Promise<number> {
           else if (BOOTSTRAP_TYPES.has(change.entityType)) needBootstrap = true;
           else if (change.entityType === "message" || change.entityType === "artifact") {
             if (change.parentEntityId) staleThreads.add(change.parentEntityId);
-          } else if (
-            change.entityType === "message_version" ||
-            change.entityType === "artifact_version"
-          ) {
-            // Parent is the message/artifact; the thread refetch covers it.
-            if (change.parentEntityId) staleThreads.add(change.parentEntityId);
           }
+          // message_version/artifact_version parents are the message/artifact
+          // id, NOT a conversation — and every version write is accompanied
+          // by a message/artifact change that invalidates the right thread.
         }
         for (const type of listTypes) {
           await LIST_REFRESHERS[type]!();
@@ -247,8 +248,10 @@ export async function startSync(): Promise<() => void> {
 
   await hydrateFromDisk();
   try {
-    await fullSync();
+    // Deliver pending offline writes BEFORE pulling server truth, so a
+    // restart can't clobber optimistic local state with stale lists.
     await flushQueue();
+    await fullSync();
   } catch (err) {
     const offline = !navigator.onLine;
     useDataStore
@@ -281,6 +284,21 @@ export function stopSync(): void {
 /** Sign-out teardown: stop syncing and destroy every local trace. */
 export async function purgeLocalData(): Promise<void> {
   stopSync();
+  await clearMutationQueue();
   await dbWipe();
   useDataStore.getState().clearAll();
+  // Open threads and code sessions belong to the signed-out account too.
+  const { useThreadStore } = await import("@/state/threadStore");
+  useThreadStore.getState().reset();
+  const { useCodeStore } = await import("@/state/codeStore");
+  useCodeStore.setState({
+    sessions: {},
+    timelines: {},
+    activeSessionId: null,
+    running: {},
+    pendingApproval: null,
+    remoteTasks: [],
+    remoteDevices: [],
+    hydrated: false,
+  });
 }

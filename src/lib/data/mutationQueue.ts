@@ -87,6 +87,15 @@ export function onQueueDrained(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/** Sign-out teardown: drop every queued write so it can't replay into the next account. */
+export async function clearMutationQueue(): Promise<void> {
+  await loadQueue();
+  for (const record of queue) {
+    await dbDelete("pendingMutations", record.id);
+  }
+  queue = [];
+}
+
 /**
  * Enqueue a mutation. The caller applies the optimistic change to the store
  * BEFORE calling this; the queue guarantees eventual delivery + id adoption.
@@ -104,7 +113,9 @@ export async function enqueueMutation(
       ? 0
       : entityId
         ? revisionOf(entityType, entityId)
-        : 0);
+        : operation.type === "settings.update"
+          ? settingsRevision()
+          : 0);
   const record: QueuedMutation = {
     id: crypto.randomUUID(),
     body: JSON.stringify({
@@ -134,15 +145,62 @@ function postMutation(body: string): Promise<MutationOutcome> {
   return api<MutationOutcome>("/v1/mutations", { method: "POST", body });
 }
 
+/** The settings row's server revision (entityId is the Settings row id, unknown at call sites). */
+function settingsRevision(): number {
+  const revisions = useDataStore.getState().revisions;
+  for (const [key, revision] of Object.entries(revisions)) {
+    if (key.startsWith("settings:")) return revision;
+  }
+  return 0;
+}
+
 function applyOutcome(record: QueuedMutation, outcome: MutationOutcome): void {
   const store = useDataStore.getState();
   if (outcome.entityMappings) {
     for (const [localId, serverId] of Object.entries(outcome.entityMappings)) {
       store.adoptEntityId(record.entityType, localId, serverId);
+      // Later queued writes that still reference the optimistic local id
+      // (offline rename/delete right after a create) must target the
+      // adopted server id, or the server 404s and the edit is lost.
+      void rewriteQueuedEntityIds(localId, serverId, outcome.entity?.revision ?? 1);
     }
   }
   if (outcome.entity) {
     store.setRevision(record.entityType, outcome.entity.id, outcome.entity.revision);
+  }
+}
+
+async function rewriteQueuedEntityIds(
+  localId: string,
+  serverId: string,
+  adoptedRevision: number,
+): Promise<void> {
+  for (let i = 0; i < queue.length; i++) {
+    const record = queue[i]!;
+    if (record.entityId !== localId) continue;
+    const parsed = JSON.parse(record.body) as {
+      clientMutationId: string;
+      baseRevision: number;
+      operation: MutationOperation;
+    };
+    if (!("entityId" in parsed.operation)) continue;
+    const operation = { ...parsed.operation, entityId: serverId } as MutationOperation;
+    const rewritten: QueuedMutation = {
+      ...record,
+      id: crypto.randomUUID(),
+      entityId: serverId,
+      body: "",
+    };
+    rewritten.body = JSON.stringify({
+      clientMutationId: rewritten.id,
+      // The queued write was staged against the optimistic row; its correct
+      // base is the revision the create just came back with.
+      baseRevision: Math.max(parsed.baseRevision, adoptedRevision),
+      operation,
+    });
+    queue[i] = rewritten;
+    await dbDelete("pendingMutations", record.id);
+    await dbPut("pendingMutations", rewritten.id, rewritten);
   }
 }
 
@@ -207,15 +265,20 @@ export async function flushQueue(): Promise<void> {
           }
           if (err.isAuthError) break; // signed out; queue survives for next session
         }
-        // Transient (network / 500 retryable): back off and stop this flush.
-        record.attempts += 1;
-        await dbPut("pendingMutations", record.id, record);
-        if (record.attempts >= MAX_ATTEMPTS) {
-          queue.shift();
-          await dbDelete("pendingMutations", record.id);
-          continue;
+        // Pure network failures (offline) must never consume attempts — an
+        // offline queue is the whole point. Only genuine server 5xx responses
+        // count toward the retry cap.
+        const isServerError = err instanceof BackendError && err.status >= 500;
+        if (isServerError) {
+          record.attempts += 1;
+          await dbPut("pendingMutations", record.id, record);
+          if (record.attempts >= MAX_ATTEMPTS) {
+            queue.shift();
+            await dbDelete("pendingMutations", record.id);
+            continue;
+          }
         }
-        break;
+        break; // stop this flush; the next poll/online event retries
       }
     }
   } finally {

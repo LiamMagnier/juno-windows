@@ -126,13 +126,24 @@ async fn run_stream(
     let _ = on_event.send(StreamEvent::Started { status });
 
     let mut stream = response.bytes_stream();
+    // Network chunks can split multi-byte UTF-8 sequences; carry the
+    // incomplete tail into the next chunk instead of lossy-replacing it.
+    let mut pending: Vec<u8> = Vec::new();
     loop {
         tokio::select! {
             item = stream.next() => match item {
                 Some(Ok(bytes)) => {
-                    let data = String::from_utf8_lossy(&bytes).to_string();
-                    if on_event.send(StreamEvent::Chunk { data }).is_err() {
-                        return Ok(()); // channel gone: frontend went away
+                    pending.extend_from_slice(&bytes);
+                    let valid_len = match std::str::from_utf8(&pending) {
+                        Ok(_) => pending.len(),
+                        Err(e) => e.valid_up_to(),
+                    };
+                    if valid_len > 0 {
+                        let data = String::from_utf8_lossy(&pending[..valid_len]).to_string();
+                        pending.drain(..valid_len);
+                        if on_event.send(StreamEvent::Chunk { data }).is_err() {
+                            return Ok(()); // channel gone: frontend went away
+                        }
                     }
                 }
                 Some(Err(e)) => return Err(e.without_url().to_string()),
@@ -140,6 +151,10 @@ async fn run_stream(
             },
             _ = cancel.cancelled() => return Ok(()),
         }
+    }
+    if !pending.is_empty() {
+        let data = String::from_utf8_lossy(&pending).to_string();
+        let _ = on_event.send(StreamEvent::Chunk { data });
     }
     let _ = on_event.send(StreamEvent::End);
     Ok(())

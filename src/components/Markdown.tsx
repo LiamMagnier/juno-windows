@@ -44,9 +44,17 @@ function onClickCapture(e: React.MouseEvent) {
 export const Markdown = memo(function Markdown({ text }: { text: string }) {
   const html = useMemo(() => {
     const raw = marked.parse(text, { async: false });
+    // Allowlist, not denylist: only the structures markdown can produce.
     return DOMPurify.sanitize(raw, {
-      FORBID_TAGS: ["style", "form", "input", "iframe", "object", "embed"],
-      FORBID_ATTR: ["onerror", "onclick", "onload"],
+      ALLOWED_TAGS: [
+        "p", "br", "hr", "blockquote", "pre", "code", "span",
+        "em", "strong", "del", "s", "a", "img",
+        "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6",
+        "table", "thead", "tbody", "tr", "th", "td",
+        "sup", "sub", "input",
+      ],
+      ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "data-lang", "data-external", "type", "checked", "disabled", "start"],
+      ALLOWED_URI_REGEXP: /^(?:https?:|data:image\/(?:png|jpe?g|gif|webp);base64,)/i,
     });
   }, [text]);
 

@@ -27,6 +27,10 @@ interface PendingSignIn extends AuthHandshake {
 }
 
 let pending: PendingSignIn | null = null;
+/** The /app-auth page auto-redirects AND offers a manual "Open Juno" button —
+ * the same callback can arrive twice. Remember consumed states so a repeat is
+ * a harmless no-op instead of a "stale sign-in" error that kicks the user out. */
+const consumedStates = new Set<string>();
 
 async function installationId(): Promise<string> {
   const existing = await secretGet("installation-id");
@@ -80,14 +84,17 @@ export async function completeSignIn(url: string): Promise<SignInResult | null> 
     `${parsed.hostname}${parsed.pathname}`.replace(/\/$/, "") === "auth/callback";
   if (!isAuthCallback) return null;
 
+  const code = parsed.searchParams.get("code") ?? "";
+  const state = parsed.searchParams.get("state") ?? "";
+  const nonce = parsed.searchParams.get("nonce") ?? "";
+  if (state && consumedStates.has(state)) {
+    return null; // duplicate delivery of an already-exchanged callback
+  }
   const handshake = pending;
   pending = null;
   if (!handshake || Date.now() - handshake.startedAt > HANDSHAKE_TTL_MS) {
     throw new BackendError(400, "stale_sign_in", "This sign-in attempt expired. Please try again.");
   }
-  const code = parsed.searchParams.get("code") ?? "";
-  const state = parsed.searchParams.get("state") ?? "";
-  const nonce = parsed.searchParams.get("nonce") ?? "";
   if (!code || state !== handshake.state || nonce !== handshake.nonce) {
     throw new BackendError(
       400,
@@ -107,6 +114,7 @@ export async function completeSignIn(url: string): Promise<SignInResult | null> 
       platform: `windows-${host.arch}`,
       appVersion: host.appVersion,
     });
+    consumedStates.add(state);
     return { deviceSession: result.deviceSession };
   } catch (err) {
     const commandError = err as { code?: string; message?: string };

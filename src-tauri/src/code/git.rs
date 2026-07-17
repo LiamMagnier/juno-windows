@@ -40,7 +40,14 @@ pub struct GitLogEntry {
 
 fn run_git(root: &Path, args: &[&str]) -> Result<(bool, String), CommandError> {
     let mut cmd = Command::new("git");
+    // Defense in depth: app-initiated git must never execute repo-configured
+    // code (hooks, fsmonitor) — a planted .git/hooks script would otherwise
+    // run on the inspector's own status/commit calls.
     cmd.current_dir(root)
+        .arg("-c")
+        .arg("core.hooksPath=")
+        .arg("-c")
+        .arg("core.fsmonitor=false")
         .args(args)
         .env("GIT_PAGER", "cat")
         .env("GIT_TERMINAL_PROMPT", "0");

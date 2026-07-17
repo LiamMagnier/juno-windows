@@ -38,6 +38,24 @@ fn relative_display(root: &Path, absolute: &Path) -> String {
         .unwrap_or_else(|_| absolute.to_string_lossy().to_string())
 }
 
+/// Paths whose contents execute automatically (git hooks/config, workspace
+/// permission rules). Writes here would let a no-prompt file edit become
+/// arbitrary command execution, so they are refused at the Rust boundary —
+/// no permission mode and no TS-layer bug can reach them.
+fn is_protected_path(root: &Path, absolute: &Path) -> bool {
+    let Ok(rel) = absolute.strip_prefix(root) else {
+        return true;
+    };
+    let mut components = rel.components();
+    match components
+        .next()
+        .map(|c| c.as_os_str().to_string_lossy().to_lowercase())
+    {
+        Some(first) => first == ".git" || first == ".juno",
+        None => false,
+    }
+}
+
 /// Recursive gitignore-aware listing (depth-capped by entry count).
 #[tauri::command]
 pub fn ws_list(
@@ -147,6 +165,12 @@ pub fn ws_write(
         ));
     }
     let absolute = resolve_in_root(&root, &path)?;
+    if is_protected_path(&root, &absolute) {
+        return Err(CommandError::new(
+            "path_protected",
+            "Files under .git/ and .juno/ can't be modified by the agent.",
+        ));
+    }
     if let Some(parent) = absolute.parent() {
         std::fs::create_dir_all(parent)
             .map_err(|e| CommandError::new("write_failed", e.to_string()))?;
@@ -186,6 +210,12 @@ pub fn ws_delete_file(
         ));
     }
     let absolute = resolve_in_root(&root, &path)?;
+    if is_protected_path(&root, &absolute) {
+        return Err(CommandError::new(
+            "path_protected",
+            "Files under .git/ and .juno/ can't be modified by the agent.",
+        ));
+    }
     let meta = std::fs::metadata(&absolute)
         .map_err(|_| CommandError::new("not_found", format!("File not found: {path}")))?;
     if meta.is_dir() {

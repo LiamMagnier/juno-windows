@@ -24,7 +24,13 @@ const SENSITIVE_COMMAND_PATTERNS: Array<{ re: RegExp; why: string }> = [
   // Windows-specific
   { re: /\b(rd|rmdir)\b\s+(\/s|\/q|\/s\s+\/q)/i, why: "recursive directory delete" },
   { re: /\bdel\b\s+.*(\/f|\/s|\/q)/i, why: "force delete" },
-  { re: /\bremove-item\b.*(-recurse|-force)/i, why: "recursive force delete" },
+  // remove-item + its aliases/abbreviations (ri, erase; -r/-re.../-fo...)
+  { re: /\b(remove-item|ri|erase)\b.*(\s-r(e[a-z]*)?\b|\s-f(o[a-z]*)?\b|-recurse|-force)/i, why: "recursive force delete" },
+  { re: /\[(system\.)?io\.(directory|file)\]::(delete|move)/i, why: ".NET filesystem delete" },
+  { re: /\bgit\s+push\b.*\s\+\S+/, why: "git force-push (refspec)" },
+  { re: /\b(gc|get-content|type)\b.*\.env(\.[a-z]+)?\b/i, why: "reads env secrets" },
+  { re: /\[(system\.)?io\.file\]::read/i, why: ".NET file read of arbitrary paths" },
+  { re: /\b(iex|invoke-expression)\b/i, why: "dynamic script execution" },
   { re: /\bformat(\.com)?\s+[a-z]:/i, why: "disk format" },
   { re: /\breg(\.exe)?\s+(add|delete)\b/i, why: "registry modification" },
   { re: /\b(netsh|bcdedit|schtasks|sc(\.exe)?\s+(config|delete|create))\b/i, why: "system configuration change" },
@@ -48,6 +54,12 @@ const ELEVATED_COMMAND_PATTERNS: Array<{ re: RegExp; why: string }> = [
   { re: /\bssh\b|\bscp\b|\brsync\b.*:/i, why: "remote access" },
 ];
 
+/**
+ * Best-effort detection: a regex denylist cannot be complete against
+ * PowerShell's alias/expression space. The hard guarantees live in Rust
+ * (workspace containment, read-only enforcement, .git/.juno write protection)
+ * — this layer decides when to ASK, and errs toward asking.
+ */
 export function classifySensitiveCommand(command: string): string | null {
   for (const { re, why } of SENSITIVE_COMMAND_PATTERNS) {
     if (re.test(command)) return why;

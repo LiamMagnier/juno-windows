@@ -31,10 +31,24 @@
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": "'self' asset: http://asset.localhost blob: data: https:",
+        "img-src": "'self' asset: http://asset.localhost blob: data: https://chat.liams.dev http://localhost:3000",
         "font-src": "'self' data:",
         "media-src": "'self' blob: data:",
-        "connect-src": "'self' ipc: http://ipc.localhost https: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* wss:",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "frame-src": "'self' blob: data:",
+        "worker-src": "'self' blob:",
+        "object-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'self'"
+      },
+      "devCsp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' blob: data: https://chat.liams.dev http://localhost:3000",
+        "font-src": "'self' data:",
+        "media-src": "'self' blob: data:",
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:* http://localhost:*",
         "frame-src": "'self' blob: data:",
         "worker-src": "'self' blob:",
         "object-src": "'none'",
@@ -55,9 +69,8 @@
       }
     },
     "updater": {
-      "active": false,
       "endpoints": [
-        "https://github.com/OWNER/juno-windows/releases/latest/download/latest.json"
+        "https://github.com/LiamMagnier/juno-windows/releases/latest/download/latest.json"
       ],
       "pubkey": "",
       "windows": {

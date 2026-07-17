@@ -19,20 +19,15 @@ pub fn run() {
     // existing window and forwards the URL instead of spawning a new process.
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
                 let _ = window.set_focus();
             }
-            // On Windows the deep-link URL arrives in argv of the second instance.
-            let urls: Vec<String> = args
-                .into_iter()
-                .filter(|arg| arg.starts_with("juno://"))
-                .collect();
-            if !urls.is_empty() {
-                let _ = app.emit(DEEP_LINK_EVENT, urls);
-            }
+            // Second-launch deep-link URLs are forwarded by the plugin's
+            // `deep-link` feature into on_open_url — re-emitting argv here
+            // would double-deliver every auth callback.
         }));
     }
 

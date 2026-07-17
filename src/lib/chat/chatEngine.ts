@@ -51,6 +51,9 @@ const RECOVERY_WINDOW_MS = 3_600_000 + 60_000;
 
 let sequenceCounter = 0;
 const active = new Map<string, ActiveGeneration>();
+/** Latest generation sequence per conversation — recovery loops check THIS,
+ * so a new generation in another conversation doesn't abort them. */
+const latestSequence = new Map<string, number>();
 
 function threadKey(conversationId: string | null, privateMode: boolean): string {
   return privateMode ? PRIVATE_ID : (conversationId ?? "new");
@@ -134,6 +137,7 @@ export async function sendMessage(options: SendOptions): Promise<string | null> 
   const generationId = crypto.randomUUID();
   const controller = new AbortController();
   const sequence = ++sequenceCounter;
+  latestSequence.set(key, sequence);
 
   // ---- optimistic rows ----
   const now = new Date().toISOString();
@@ -462,7 +466,7 @@ async function recoverDroppedGeneration(
   const startedAt = Date.now();
   let attempt = 0;
   while (Date.now() - startedAt < RECOVERY_WINDOW_MS) {
-    if (sequenceCounter !== gen.sequence) return; // newer generation superseded us
+    if (latestSequence.get(gen.conversationId) !== gen.sequence) return; // superseded in THIS conversation
     await new Promise((r) => setTimeout(r, attempt < 8 ? 5_000 : 15_000));
     attempt++;
     try {
