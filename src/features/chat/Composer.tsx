@@ -182,8 +182,12 @@ export function Composer({
   const deepResearch = !privateMode && (prefs.deepResearchByThread[threadKey] ?? false);
   // Badge counts genuinely-added items (canvas is on by default, so its state
   // isn't an "addition"); it tells the user something is attached behind the +.
+  const webSearchOn = !privateMode && (model?.capabilities.webSearch ?? false) && prefs.webSearch;
   const addActiveCount =
-    (deepResearch ? 1 : 0) + selectedConnectors.length + (pendingProject ? 1 : 0);
+    (webSearchOn ? 1 : 0) +
+    (deepResearch ? 1 : 0) +
+    selectedConnectors.length +
+    (pendingProject ? 1 : 0);
 
   const chooseProject = (id: string | null) => {
     setPendingProjectId(id);
@@ -566,170 +570,202 @@ export function Composer({
         />
 
         <div className="chat-controls">
-          {!privateMode ? (
-            <div className="chat-pop-wrap">
-              <button
-                type="button"
-                className="chat-control-toggle chat-add-btn"
-                aria-haspopup="dialog"
-                aria-expanded={addOpen}
-                aria-label="Add attachments, canvas, research, projects and connectors"
-                title="Add"
-                data-active={addActiveCount > 0 || undefined}
-                disabled={busy}
-                onClick={() => {
-                  const next = !addOpen;
-                  setAddOpen(next);
-                  if (next && connectors === null && !connectorsLoading) void loadConnectors();
-                }}
-              >
-                <Plus size={17} aria-hidden />
-                {addActiveCount > 0 ? (
-                  <span className="chat-control-count">{addActiveCount}</span>
-                ) : null}
-              </button>
-              <ChatPopover open={addOpen} onClose={() => setAddOpen(false)} label="Add" width={300}>
-                <div className="chat-addmenu">
-                  <button
-                    type="button"
-                    className="chat-menu-item chat-menu-row"
-                    disabled={staged.length >= MAX_ATTACHMENTS}
-                    onClick={() => {
-                      setAddOpen(false);
-                      void pickImages();
-                    }}
-                  >
-                    <ImagePlus size={16} aria-hidden />
-                    <span className="chat-menu-row-name">Add photos</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="chat-menu-item chat-menu-row"
-                    disabled={staged.length >= MAX_ATTACHMENTS}
-                    onClick={() => {
-                      setAddOpen(false);
-                      void pickFiles();
-                    }}
-                  >
-                    <Paperclip size={16} aria-hidden />
-                    <span className="chat-menu-row-name">Add files</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="chat-menu-item chat-menu-row"
-                    disabled={staged.length >= MAX_ATTACHMENTS}
-                    onClick={() => {
-                      setAddOpen(false);
-                      setLibraryOpen(true);
-                    }}
-                  >
-                    <Library size={16} aria-hidden />
-                    <span className="chat-menu-row-name">From your library</span>
-                  </button>
+          <div className="chat-pop-wrap">
+            <button
+              type="button"
+              className="chat-control-toggle chat-add-btn"
+              aria-haspopup="dialog"
+              aria-expanded={addOpen}
+              aria-label="Add attachments, tools, projects and connectors"
+              title="Add"
+              data-active={addActiveCount > 0 || undefined}
+              disabled={busy}
+              onClick={() => {
+                const next = !addOpen;
+                setAddOpen(next);
+                if (next && !privateMode && connectors === null && !connectorsLoading) void loadConnectors();
+              }}
+            >
+              <Plus size={17} aria-hidden />
+              {addActiveCount > 0 ? (
+                <span className="chat-control-count">{addActiveCount}</span>
+              ) : null}
+            </button>
+            <ChatPopover open={addOpen} onClose={() => setAddOpen(false)} label="Add" width={300}>
+              <div className="chat-addmenu">
+                {!privateMode ? (
+                  <>
+                    <button
+                      type="button"
+                      className="chat-menu-item chat-menu-row"
+                      disabled={staged.length >= MAX_ATTACHMENTS}
+                      onClick={() => {
+                        setAddOpen(false);
+                        void pickImages();
+                      }}
+                    >
+                      <ImagePlus size={16} aria-hidden />
+                      <span className="chat-menu-row-name">Add photos</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="chat-menu-item chat-menu-row"
+                      disabled={staged.length >= MAX_ATTACHMENTS}
+                      onClick={() => {
+                        setAddOpen(false);
+                        void pickFiles();
+                      }}
+                    >
+                      <Paperclip size={16} aria-hidden />
+                      <span className="chat-menu-row-name">Add files</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="chat-menu-item chat-menu-row"
+                      disabled={staged.length >= MAX_ATTACHMENTS}
+                      onClick={() => {
+                        setAddOpen(false);
+                        setLibraryOpen(true);
+                      }}
+                    >
+                      <Library size={16} aria-hidden />
+                      <span className="chat-menu-row-name">From your library</span>
+                    </button>
 
-                  <div className="chat-menu-sep" role="separator" />
+                    <div className="chat-menu-sep" role="separator" />
 
-                  <button
-                    type="button"
-                    aria-pressed={canvasOn}
-                    className="chat-menu-item chat-menu-row"
-                    data-selected={canvasOn || undefined}
-                    onClick={() => prefs.setCanvas(!canvasOn)}
-                  >
-                    <PencilRuler size={16} aria-hidden />
-                    <span className="chat-menu-row-name">Canvas &amp; artifacts</span>
-                    {canvasOn ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={deepResearch}
-                    className="chat-menu-item chat-menu-row"
-                    data-selected={deepResearch || undefined}
-                    onClick={() => prefs.setDeepResearch(threadKey, !deepResearch)}
-                  >
-                    <Telescope size={16} aria-hidden />
-                    <span className="chat-menu-row-name">Deep research</span>
-                    {deepResearch ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
-                  </button>
+                    {model?.capabilities.webSearch ? (
+                      <button
+                        type="button"
+                        aria-pressed={prefs.webSearch}
+                        className="chat-menu-item chat-menu-row"
+                        data-selected={prefs.webSearch || undefined}
+                        onClick={() => prefs.setWebSearch(!prefs.webSearch)}
+                      >
+                        <Globe size={16} aria-hidden />
+                        <span className="chat-menu-row-name">Web search</span>
+                        {prefs.webSearch ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      aria-pressed={canvasOn}
+                      className="chat-menu-item chat-menu-row"
+                      data-selected={canvasOn || undefined}
+                      onClick={() => prefs.setCanvas(!canvasOn)}
+                    >
+                      <PencilRuler size={16} aria-hidden />
+                      <span className="chat-menu-row-name">Canvas &amp; artifacts</span>
+                      {canvasOn ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={deepResearch}
+                      className="chat-menu-item chat-menu-row"
+                      data-selected={deepResearch || undefined}
+                      onClick={() => prefs.setDeepResearch(threadKey, !deepResearch)}
+                    >
+                      <Telescope size={16} aria-hidden />
+                      <span className="chat-menu-row-name">Deep research</span>
+                      {deepResearch ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                    </button>
 
-                  {isNewChat && projectList.length > 0 ? (
-                    <>
-                      <div className="chat-menu-sep" role="separator" />
-                      <div className="chat-popover-title" id="add-project-label">
-                        Add to project
+                    {isNewChat && projectList.length > 0 ? (
+                      <>
+                        <div className="chat-menu-sep" role="separator" />
+                        <div className="chat-popover-title" id="add-project-label">
+                          Add to project
+                        </div>
+                        <div className="chat-addmenu-scroll" role="group" aria-labelledby="add-project-label">
+                          {projectList.map((p) => {
+                            const active = pendingProject === p.id;
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                aria-pressed={active}
+                                className="chat-menu-item chat-menu-row"
+                                data-selected={active || undefined}
+                                onClick={() => chooseProject(active ? null : p.id)}
+                              >
+                                <Folder size={16} aria-hidden />
+                                <span className="chat-menu-row-name">{p.name}</span>
+                                {active ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : null}
+
+                    <div className="chat-menu-sep" role="separator" />
+                    <div className="chat-popover-title">Use connectors</div>
+                    {connectorsLoading ? (
+                      <div className="chat-popover-empty">
+                        <Loader2 size={14} className="chat-spin" aria-hidden /> Loading…
                       </div>
-                      <div className="chat-addmenu-scroll" role="group" aria-labelledby="add-project-label">
-                        {projectList.map((p) => {
-                          const active = pendingProject === p.id;
+                    ) : connectorsError ? (
+                      <div className="chat-popover-empty">
+                        <span>{connectorsError}</span>
+                        <button type="button" className="btn btn-secondary" onClick={() => void loadConnectors()}>
+                          Retry
+                        </button>
+                      </div>
+                    ) : connectors && connectors.length === 0 ? (
+                      <div className="chat-popover-empty">
+                        No connectors yet. Connect apps from the Connections page.
+                      </div>
+                    ) : (
+                      <div className="chat-addmenu-scroll">
+                        {connectors?.map((connector) => {
+                          const checked = selectedConnectors.includes(connector.id);
+                          const capped = !checked && selectedConnectors.length >= 5;
                           return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              aria-pressed={active}
-                              className="chat-menu-item chat-menu-row"
-                              data-selected={active || undefined}
-                              onClick={() => chooseProject(active ? null : p.id)}
+                            <label
+                              key={connector.id}
+                              className="chat-connector-row"
+                              data-disabled={capped || undefined}
                             >
-                              <Folder size={16} aria-hidden />
-                              <span className="chat-menu-row-name">{p.name}</span>
-                              {active ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
-                            </button>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={capped}
+                                onChange={() => toggleConnector(connector.id)}
+                              />
+                              <span className="chat-connector-label">{connector.label}</span>
+                              {connector.accountLabel ? (
+                                <span className="chat-connector-account">{connector.accountLabel}</span>
+                              ) : null}
+                            </label>
                           );
                         })}
                       </div>
-                    </>
-                  ) : null}
+                    )}
+                    {connectors && connectors.length > 0 ? (
+                      <div className="chat-connectors-hint">Up to 5 per conversation</div>
+                    ) : null}
 
-                  <div className="chat-menu-sep" role="separator" />
-                  <div className="chat-popover-title">Use connectors</div>
-                  {connectorsLoading ? (
-                    <div className="chat-popover-empty">
-                      <Loader2 size={14} className="chat-spin" aria-hidden /> Loading…
-                    </div>
-                  ) : connectorsError ? (
-                    <div className="chat-popover-empty">
-                      <span>{connectorsError}</span>
-                      <button type="button" className="btn btn-secondary" onClick={() => void loadConnectors()}>
-                        Retry
-                      </button>
-                    </div>
-                  ) : connectors && connectors.length === 0 ? (
-                    <div className="chat-popover-empty">
-                      No connectors yet. Connect apps from the Connections page.
-                    </div>
-                  ) : (
-                    <div className="chat-addmenu-scroll">
-                      {connectors?.map((connector) => {
-                        const checked = selectedConnectors.includes(connector.id);
-                        const capped = !checked && selectedConnectors.length >= 5;
-                        return (
-                          <label
-                            key={connector.id}
-                            className="chat-connector-row"
-                            data-disabled={capped || undefined}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              disabled={capped}
-                              onChange={() => toggleConnector(connector.id)}
-                            />
-                            <span className="chat-connector-label">{connector.label}</span>
-                            {connector.accountLabel ? (
-                              <span className="chat-connector-account">{connector.accountLabel}</span>
-                            ) : null}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {connectors && connectors.length > 0 ? (
-                    <div className="chat-connectors-hint">Up to 5 per conversation</div>
-                  ) : null}
-                </div>
-              </ChatPopover>
-            </div>
-          ) : null}
+                    <div className="chat-menu-sep" role="separator" />
+                  </>
+                ) : null}
+
+                <button
+                  type="button"
+                  aria-pressed={privateMode}
+                  className="chat-menu-item chat-menu-row"
+                  data-selected={privateMode || undefined}
+                  onClick={() => {
+                    togglePrivate();
+                    setAddOpen(false);
+                  }}
+                >
+                  {privateMode ? <Lock size={16} aria-hidden /> : <LockOpen size={16} aria-hidden />}
+                  <span className="chat-menu-row-name">Private chat</span>
+                  {privateMode ? <Check size={15} className="chat-menu-check" aria-hidden /> : null}
+                </button>
+              </div>
+            </ChatPopover>
+          </div>
 
           <ModelSelector
             models={models}
@@ -771,34 +807,6 @@ export function Composer({
               </ChatPopover>
             </div>
           ) : null}
-
-          {model?.capabilities.webSearch ? (
-            <button
-              type="button"
-              className="chat-control-toggle"
-              aria-pressed={prefs.webSearch}
-              aria-label="Web search"
-              title="Web search"
-              data-active={prefs.webSearch || undefined}
-              disabled={busy || privateMode}
-              onClick={() => prefs.setWebSearch(!prefs.webSearch)}
-            >
-              <Globe size={15} aria-hidden />
-            </button>
-          ) : null}
-
-          <button
-            type="button"
-            className="chat-control-toggle"
-            aria-pressed={privateMode}
-            aria-label={privateMode ? "Leave private mode" : "Private mode"}
-            title={privateMode ? "Leave private mode" : "Private mode"}
-            data-active={privateMode || undefined}
-            disabled={busy}
-            onClick={togglePrivate}
-          >
-            {privateMode ? <Lock size={15} aria-hidden /> : <LockOpen size={15} aria-hidden />}
-          </button>
 
           <div className="chat-controls-spacer" />
 
