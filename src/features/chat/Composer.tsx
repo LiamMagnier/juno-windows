@@ -304,7 +304,7 @@ export function Composer({
 
   // OS drag-drop through the webview (browser drop events don't carry paths in Tauri).
   useEffect(() => {
-    if (privateMode) return;
+    if (privateMode || !("__TAURI_INTERNALS__" in window)) return;
     let cancelled = false;
     let unlisten: (() => void) | undefined;
     void getCurrentWebview()

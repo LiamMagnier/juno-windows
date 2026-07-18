@@ -17,13 +17,12 @@ body {
      so a missing native backdrop never leaves the window see-through. */
   background: transparent;
   color: hsl(var(--foreground));
-  /* Newsreader serif is the whole UI (font-sans === font-serif on purpose). */
   font-family: var(--font-sans);
-  font-optical-sizing: auto;
   font-size: var(--text-body);
-  line-height: 1.5;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "ss01" 1;
   overflow: hidden;
   user-select: none;
   cursor: default;
@@ -37,7 +36,7 @@ body::after {
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  opacity: 0.022;
+  opacity: 0.012;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 @media (forced-colors: active) {
@@ -49,8 +48,8 @@ body::after {
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-weight: 600;
   color: hsl(var(--muted-foreground));
 }
 
@@ -86,7 +85,7 @@ button {
   background: none;
   border: none;
   padding: 0;
-  cursor: default;
+  cursor: pointer;
 }
 
 a {
@@ -99,8 +98,8 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 1px;
+  outline: 2px solid hsl(var(--ring) / 0.86);
+  outline-offset: 2px;
   border-radius: var(--radius-control);
 }
 
@@ -112,12 +111,12 @@ a {
 
 /* ---- Scrollbars: thin, quiet, Windows-overlay feel ---- */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--foreground) / 0.18);
+  background: hsl(var(--foreground) / 0.15);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: padding-box;

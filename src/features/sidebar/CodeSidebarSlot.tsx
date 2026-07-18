@@ -156,7 +156,7 @@ function CodeSidebarContent() {
           className="sidebar-row sidebar-newchat"
           onClick={startNewCodeSession}
         >
-          <Plus size={16} aria-hidden />
+          <span className="sidebar-action-icon"><Plus size={15} aria-hidden /></span>
           New session
         </button>
 

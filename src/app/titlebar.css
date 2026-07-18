@@ -1,28 +1,42 @@
 .titlebar {
   display: flex;
   align-items: stretch;
-  height: 40px;
-  flex: 0 0 40px;
-  gap: 2px;
-  /* Translucent so the window material reads edge-to-edge across the top. */
+  height: 44px;
+  flex: 0 0 44px;
+  gap: 0;
   background: var(--titlebar-fill);
+  border-bottom: 1px solid hsl(var(--hairline));
+  -webkit-backdrop-filter: blur(var(--acrylic-blur)) saturate(var(--acrylic-saturate));
+  backdrop-filter: blur(var(--acrylic-blur)) saturate(var(--acrylic-saturate));
   -webkit-app-region: drag;
 }
 
 .titlebar-identity {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-inline: 12px 8px;
+  gap: 9px;
+  width: 224px;
+  padding-inline: 14px 10px;
   min-width: 0;
 }
 
+.titlebar-mark {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--primary));
+  border-radius: 7px;
+  background: hsl(var(--primary) / 0.1);
+}
+
 .titlebar-title {
-  font-family: var(--font-serif);
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 650;
   color: hsl(var(--foreground));
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 /* Flexible draggable region between the menu bar and the caption buttons. */
@@ -32,6 +46,31 @@
   -webkit-app-region: drag;
 }
 
+.titlebar-actions {
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-action {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  color: hsl(var(--muted-foreground));
+  border-radius: var(--radius-control);
+  font-size: 12px;
+  font-weight: 550;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.titlebar-action:hover {
+  color: hsl(var(--foreground));
+  background: hsl(var(--hover-fill));
+}
+
 .titlebar-captions {
   display: flex;
   -webkit-app-region: no-drag;
@@ -39,7 +78,7 @@
 
 .caption-button {
   width: 46px;
-  height: 40px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

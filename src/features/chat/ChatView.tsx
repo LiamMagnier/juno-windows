@@ -4,11 +4,13 @@
  * greeting state, and the artifacts side panel.
  */
 import { useCallback, useEffect, useMemo } from "react";
+import { LockKeyhole, PanelLeft } from "lucide-react";
 import { useDataStore } from "@/state/dataStore";
 import { useThreadStore } from "@/state/threadStore";
 import { useAuthStore } from "@/state/authStore";
 import { sendMessage } from "@/lib/chat/chatEngine";
-import { AsciiHero } from "@/components/signature/AsciiHero";
+import { DotMatrixMark } from "@/components/signature/DotMatrix";
+import { useUiStore } from "@/state/uiStore";
 import { ArtifactsPanel } from "./ArtifactsPanel";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
@@ -125,11 +127,34 @@ export function ChatView() {
     />
   );
 
+  const header = (
+    <header className="chat-topbar">
+      <button
+        type="button"
+        className="chat-topbar-icon"
+        aria-label="Toggle sidebar"
+        title="Toggle sidebar (Ctrl+B)"
+        onClick={() => useUiStore.getState().toggleSidebar()}
+      >
+        <PanelLeft size={17} aria-hidden />
+      </button>
+      <div className="chat-topbar-copy">
+        <span className="chat-topbar-title">
+          {privateMode ? "Private chat" : (conversation?.title ?? "New chat")}
+        </span>
+        {privateMode ? (
+          <span className="chat-topbar-status"><LockKeyhole size={11} aria-hidden /> On-device only</span>
+        ) : null}
+      </div>
+    </header>
+  );
+
   // Loading / error for an existing conversation with nothing local yet.
   if (conversationId && messages.length === 0 && (loading || loadError)) {
     return (
       <div className="chat-root">
         <div className="chat-main">
+          {header}
           <div className="chat-empty">
             {loading ? (
               <p className="chat-muted" role="status">
@@ -158,10 +183,18 @@ export function ChatView() {
   return (
     <div className="chat-root">
       <div className="chat-main">
+        {header}
         {showEmptyState ? (
           <div className="chat-empty">
-            <AsciiHero size={116} className="chat-hero" />
+            <div className="chat-empty-mark" aria-hidden>
+              <DotMatrixMark size={30} />
+            </div>
             <h1 className="chat-greeting">{greeting}</h1>
+            <p className="chat-empty-subtitle">
+              {privateMode
+                ? "This conversation stays on this device and won’t appear in history."
+                : "Ask a question, explore an idea, or bring in a file to get started."}
+            </p>
             <div className="chat-empty-composer">{composer}</div>
           </div>
         ) : (
