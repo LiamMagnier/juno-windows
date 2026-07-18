@@ -3,6 +3,7 @@ name: windows
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -15,6 +16,8 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -63,17 +66,82 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
-      - name: Build Tauri app (NSIS installer)
+      - name: Build Tauri app (NSIS + updater artifacts)
         run: npm run tauri build
         env:
-          # Signing is intentionally absent in CI until release credentials
-          # exist; see docs/RELEASING.md for the exact secrets to add.
           CI: "true"
+          # Signs updater packages when the secret is present (required for
+          # in-app auto-update). Builds still succeed unsigned for PRs.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: juno-windows-installer
           path: |
-            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/nsis/*
           if-no-files-found: error
+
+      # ---- Tag releases: attach installer + latest.json for auto-update ----
+      - name: Prepare release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          NSIS="src-tauri/target/release/bundle/nsis"
+          ls -la "$NSIS"
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Prefer the updater zip when present; fall back to the setup exe.
+          INSTALLER=$(ls "$NSIS"/*-setup.exe 2>/dev/null | head -1 || true)
+          UPDATER_ZIP=$(ls "$NSIS"/*.nsis.zip 2>/dev/null | head -1 || true)
+          SIG=$(ls "$NSIS"/*.sig 2>/dev/null | head -1 || true)
+          # Some Tauri versions put the signature next to the zip as .nsis.zip.sig
+          if [[ -z "${SIG}" && -n "${UPDATER_ZIP}" && -f "${UPDATER_ZIP}.sig" ]]; then
+            SIG="${UPDATER_ZIP}.sig"
+          fi
+          echo "installer=${INSTALLER}" >> "$GITHUB_OUTPUT"
+          echo "updater_zip=${UPDATER_ZIP}" >> "$GITHUB_OUTPUT"
+          echo "sig=${SIG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          if [[ -n "${UPDATER_ZIP}" && -n "${SIG}" ]]; then
+            python - "$VERSION" "$UPDATER_ZIP" "$SIG" "${{ github.repository }}" "${GITHUB_REF_NAME}" <<'PY'
+          import json, pathlib, sys, datetime
+          version, zip_path, sig_path, repo, tag = sys.argv[1:6]
+          signature = pathlib.Path(sig_path).read_text(encoding="utf-8").replace("\r", "").strip()
+          url = f"https://github.com/{repo}/releases/download/{tag}/{pathlib.Path(zip_path).name}"
+          payload = {
+              "version": version,
+              "notes": f"Juno for Windows {version}",
+              "pub_date": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "platforms": {
+                  "windows-x86_64": {
+                      "signature": signature,
+                      "url": url,
+                  }
+              },
+          }
+          pathlib.Path("latest.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          print(pathlib.Path("latest.json").read_text(encoding="utf-8"))
+          PY
+            echo "has_updater=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_updater=false" >> "$GITHUB_OUTPUT"
+            echo "WARN: updater zip/signature missing — release will ship installer only"
+          fi
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Juno for Windows ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: |
+            src-tauri/target/release/bundle/nsis/*
+            latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

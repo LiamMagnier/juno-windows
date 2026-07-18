@@ -1,11 +1,13 @@
 /**
  * Account footer: profile, sync status, settings, and a quota mini-meter
- * when the plan has a finite message limit.
+ * when the plan has a finite message limit. Quiet "Relaunch to update" chip
+ * when an update is staged (Mac-style — never a modal popup).
  */
-import { LoaderCircle, Settings } from "lucide-react";
+import { ArrowUpCircle, LoaderCircle, Settings } from "lucide-react";
 import { useAuthStore } from "@/state/authStore";
 import { useDataStore } from "@/state/dataStore";
 import { useUiStore } from "@/state/uiStore";
+import { useUpdateStore } from "@/lib/updater";
 import { DotIdenticon } from "@/components/signature/DotMatrix";
 
 export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
@@ -14,6 +16,9 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   const syncError = useDataStore((s) => s.syncError);
   const quota = useDataStore((s) => s.quota);
   const openSettings = useUiStore((s) => s.openSettings);
+  const updatePhase = useUpdateStore((s) => s.phase);
+  const relaunchToUpdate = useUpdateStore((s) => s.relaunchToUpdate);
+  const downloadAndInstall = useUpdateStore((s) => s.downloadAndInstall);
 
   const name = profile?.name ?? profile?.email ?? "Account";
   const seed = profile?.email ?? profile?.name ?? "juno";
@@ -46,6 +51,35 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
       : null;
   const meterPct = meter && meter.limit > 0 ? Math.min(1, meter.used / meter.limit) : 0;
 
+  const updateChip =
+    updatePhase.kind === "ready" ? (
+      <button
+        type="button"
+        className="sidebar-update-chip"
+        onClick={() => void relaunchToUpdate()}
+      >
+        <ArrowUpCircle size={14} aria-hidden />
+        Relaunch to update — Juno {updatePhase.version} is ready
+      </button>
+    ) : updatePhase.kind === "downloading" ? (
+      <div className="sidebar-update-chip" data-progress role="status">
+        <LoaderCircle size={14} className="sidebar-spin" aria-hidden />
+        Downloading Juno {updatePhase.version}…
+        <span className="sidebar-update-bar" aria-hidden>
+          <span style={{ width: `${Math.round(updatePhase.progress * 100)}%` }} />
+        </span>
+      </div>
+    ) : updatePhase.kind === "available" ? (
+      <button
+        type="button"
+        className="sidebar-update-chip"
+        onClick={() => void downloadAndInstall()}
+      >
+        <ArrowUpCircle size={14} aria-hidden />
+        Update available — Juno {updatePhase.version}
+      </button>
+    ) : null;
+
   return (
     <div className="sidebar-footer">
       {meter ? (
@@ -62,6 +96,8 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           </span>
         </div>
       ) : null}
+
+      {updateChip}
 
       {syncPhase === "offline" ? (
         <div className="sidebar-sync-note" data-tone="offline">

@@ -1,7 +1,7 @@
 {
   "name": "juno-windows",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "description": "Juno for Windows — native Tauri 2 desktop client of the Juno backend",
   "scripts": {

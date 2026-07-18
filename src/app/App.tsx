@@ -10,6 +10,7 @@ import { attachDeepLinkListener, useAuthStore } from "@/state/authStore";
 import { applyThemeToDocument } from "@/state/uiStore";
 import { useUiStore } from "@/state/uiStore";
 import { useThreadStore } from "@/state/threadStore";
+import { startAutomaticUpdateChecks } from "@/lib/updater";
 import "./app.css";
 
 export function App() {
@@ -60,6 +61,8 @@ export function App() {
       // The window starts hidden (tauri.conf) so users never see a flash of
       // unstyled/half-restored UI.
       if (startup.showMain) await getCurrentWindow().show();
+      // Quiet background update checks (Mac-style — chip when ready, no modal).
+      startAutomaticUpdateChecks();
     })();
 
     return () => {

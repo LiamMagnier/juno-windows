@@ -1,6 +1,9 @@
-/** General: theme, accent, response language, UI language display. */
+/** General: theme, accent, response language, UI language, and updates. */
 import { useDataStore } from "@/state/dataStore";
 import { useUiStore, type AccentName, type ThemePreference } from "@/state/uiStore";
+import { useUpdateStore } from "@/lib/updater";
+import { hostInfo, type HostInfo } from "@/lib/host";
+import { useEffect, useState } from "react";
 import {
   DebouncedTextSetting,
   patchAccountSettings,
@@ -29,6 +32,23 @@ export function GeneralSection() {
   const setTransparency = useUiStore((s) => s.setTransparency);
   const themeTick = useSavedTick();
   const accentTick = useSavedTick();
+  const updatePhase = useUpdateStore((s) => s.phase);
+  const checkForUpdates = useUpdateStore((s) => s.checkForUpdates);
+  const downloadAndInstall = useUpdateStore((s) => s.downloadAndInstall);
+  const relaunchToUpdate = useUpdateStore((s) => s.relaunchToUpdate);
+  const [host, setHost] = useState<HostInfo | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    hostInfo()
+      .then((info) => {
+        if (!cancelled) setHost(info);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const chooseTheme = (value: ThemePreference) => {
     if (value === theme) return;
@@ -106,6 +126,46 @@ export function GeneralSection() {
         hint="Set from your account on the web."
       >
         <span className="settings-value">{uiLocale === "auto" ? "Auto" : uiLocale}</span>
+      </SettingRow>
+
+      <SettingRow
+        label="App updates"
+        hint={
+          updatePhase.kind === "ready"
+            ? `Juno ${updatePhase.version} is downloaded — relaunch to install.`
+            : updatePhase.kind === "downloading"
+              ? `Downloading Juno ${updatePhase.version}…`
+              : updatePhase.kind === "available"
+                ? `Juno ${updatePhase.version} is available.`
+                : updatePhase.kind === "upToDate"
+                  ? "You're on the latest version."
+                  : updatePhase.kind === "error"
+                    ? updatePhase.message
+                    : updatePhase.kind === "checking"
+                      ? "Checking…"
+                      : host
+                        ? `Installed ${host.appVersion}`
+                        : "Check for a newer build without re-downloading the installer."
+        }
+      >
+        {updatePhase.kind === "ready" ? (
+          <button type="button" className="btn btn-primary" onClick={() => void relaunchToUpdate()}>
+            Relaunch to update
+          </button>
+        ) : updatePhase.kind === "available" ? (
+          <button type="button" className="btn btn-primary" onClick={() => void downloadAndInstall()}>
+            Download update
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={updatePhase.kind === "checking" || updatePhase.kind === "downloading"}
+            onClick={() => void checkForUpdates({ quiet: false })}
+          >
+            {updatePhase.kind === "checking" ? "Checking…" : "Check for updates"}
+          </button>
+        )}
       </SettingRow>
     </section>
   );

@@ -1,33 +1,64 @@
 # Releasing Juno for Windows
 
-## What CI produces today
+## What CI produces
 
-`.github/workflows/windows.yml` runs on every push/PR on a Windows runner: frontend typecheck + vitest, `cargo fmt --check` + clippy (`-D warnings`) + tests, then `tauri build`, and uploads the **unsigned NSIS installer** (`Juno_<version>_x64-setup.exe`) as the `juno-windows-installer` artifact.
+`.github/workflows/windows.yml` runs on every push/PR on a Windows runner:
+
+- frontend typecheck + vitest
+- `cargo fmt --check` + clippy (`-D warnings`) + tests
+- `tauri build` (NSIS installer + **updater artifacts** when signing is configured)
+- uploads the bundle as the `juno-windows-installer` artifact
+
+On **tags** matching `v*` it also publishes a GitHub Release with:
+
+| Asset | Purpose |
+|---|---|
+| `Juno_<version>_x64-setup.exe` | Manual install / first install |
+| `*.nsis.zip` + `*.sig` | In-app auto-update payload |
+| `latest.json` | Tauri updater manifest (`plugins.updater.endpoints`) |
+
+## Auto-update (like macOS)
+
+The app checks GitHub Releases in the background on launch (quiet — no popup).
+When a newer version is ready, a **Relaunch to update** chip appears in the
+sidebar footer. Settings → General also has **Check for updates**.
+
+Endpoint: `https://github.com/LiamMagnier/juno-windows/releases/latest/download/latest.json`
 
 ## Secrets required for signed, updatable releases
 
-None of these live in the repository. Add them as GitHub Actions secrets when release infrastructure is ready:
-
 | Secret | Purpose |
 |---|---|
-| `TAURI_SIGNING_PRIVATE_KEY` | Tauri updater signing key (generate with `npm run tauri signer generate`; commit ONLY the public key into `tauri.conf.json > plugins.updater.pubkey`) |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password for the key above |
-| `WINDOWS_CERTIFICATE` / `WINDOWS_CERTIFICATE_PASSWORD` | Authenticode code-signing certificate (base64 PFX) + password — or, preferably, an Azure Trusted Signing / HSM setup via `signCommand` |
+| `TAURI_SIGNING_PRIVATE_KEY` | Tauri updater signing key (generate with `npx tauri signer generate -w ~/.tauri/juno-windows.key --ci`). Public half lives in `tauri.conf.json > plugins.updater.pubkey`. |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Optional password for the private key |
+| `WINDOWS_CERTIFICATE` / `WINDOWS_CERTIFICATE_PASSWORD` | Authenticode code-signing certificate (base64 PFX) — optional but recommended so SmartScreen stays quiet |
 
-Code signing matters doubly on Windows: unsigned installers trip SmartScreen, and the NSIS uninstaller runs with the same trust as the installer.
+**If you lose the private key, auto-update breaks for every install that trusted the old pubkey** — generate a new pair and ship a manual installer once.
 
-## Update channel
+```bash
+# One-time keypair (keep the private key out of git)
+npx tauri signer generate -w ~/.tauri/juno-windows.key --ci
+# Public → paste into tauri.conf.json plugins.updater.pubkey
+cat ~/.tauri/juno-windows.key.pub
+# Private → GitHub Actions secret
+gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/juno-windows.key
+```
 
-The Mac app updates from `https://chat.liams.dev/downloads/latest.json`. Windows needs its own manifest. The intended setup:
+## Release checklist
 
-1. Set `plugins.updater.active: true` and the real `pubkey` in `src-tauri/tauri.conf.json`; set `createUpdaterArtifacts: true` in the bundle section.
-2. Publish `latest.json` (Tauri updater schema: `version`, `pub_date`, `platforms."windows-x86_64".{signature,url}`) next to the installer — either as a GitHub release asset (current endpoint default) or at `https://chat.liams.dev/downloads/windows/latest.json` to match the macOS channel; update `plugins.updater.endpoints` accordingly.
-3. The app checks for updates from Settings (plugin `updater` + `process` relaunch are already wired in the capability file).
+1. Bump `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` in lockstep.
+2. Commit to `main`, then tag and push:
 
-## Version bumps
+```bash
+git tag -a v0.2.3 -m "Juno for Windows v0.2.3"
+git push origin main --tags
+```
 
-Keep `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` versions in lockstep. Tag `vX.Y.Z`.
+3. CI builds, signs updater artifacts, and attaches everything to the GitHub Release.
+4. Users on a previous signed build get the quiet in-app update chip.
 
 ## Architectures
 
-x64 first (`windows-latest` runner). ARM64 requires the `aarch64-pc-windows-msvc` Rust target plus a verified CI toolchain (`npm run tauri build -- --target aarch64-pc-windows-msvc`) and its own updater platform entry — add only after genuinely testing on ARM64 hardware.
+x64 first (`windows-latest` runner). ARM64 requires the `aarch64-pc-windows-msvc`
+Rust target plus its own updater platform entry in `latest.json` — add only after
+testing on ARM64 hardware.

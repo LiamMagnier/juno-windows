@@ -516,6 +516,60 @@
   padding: 8px 2px 0;
 }
 
+/* Quiet update chip — Mac-style, never a modal. */
+.sidebar-update-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+  border: 1px solid hsl(var(--primary) / 0.16);
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+}
+
+button.sidebar-update-chip:hover {
+  background: hsl(var(--primary) / 0.16);
+}
+
+button.sidebar-update-chip:active {
+  transform: scale(0.98);
+}
+
+.sidebar-update-chip[data-progress] {
+  flex-wrap: wrap;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--secondary));
+  border-color: hsl(var(--hairline));
+  cursor: default;
+}
+
+.sidebar-update-bar {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--press-fill));
+  overflow: hidden;
+}
+
+.sidebar-update-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: hsl(var(--primary));
+  transition: width var(--dur-fast) var(--ease-out-soft);
+}
+
 .sidebar-footer[data-collapsed] {
   align-items: center;
 }
