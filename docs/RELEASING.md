@@ -25,6 +25,10 @@ sidebar footer. Settings → General also has **Check for updates**.
 
 Endpoint: `https://github.com/LiamMagnier/juno-windows/releases/latest/download/latest.json`
 
+Tauri v2 reuses the NSIS `*-setup.exe` as the update bundle (plus `*.exe.sig`).
+CI writes `latest.json` from that pair — do **not** require a `.nsis.zip`
+unless you switch `createUpdaterArtifacts` to `"v1Compatible"`.
+
 ## Secrets required for signed, updatable releases
 
 | Secret | Purpose |
@@ -50,12 +54,17 @@ gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/juno-windows.key
 2. Commit to `main`, then tag and push:
 
 ```bash
-git tag -a v0.2.3 -m "Juno for Windows v0.2.3"
+git tag -a v0.2.4 -m "Juno for Windows v0.2.4"
 git push origin main --tags
 ```
 
-3. CI builds, signs updater artifacts, and attaches everything to the GitHub Release.
-4. Users on a previous signed build get the quiet in-app update chip.
+3. CI builds, signs updater artifacts, writes `latest.json`, and attaches
+   everything to the GitHub Release. The release step **fails** if `latest.json`
+   cannot be produced (missing signature / signing key).
+4. Verify the channel: `curl -sL …/releases/latest/download/latest.json` must
+   return JSON with `platforms.windows-x86_64.url` + `signature`.
+5. Users on a previous **signed** build (v0.2.3+) get the quiet in-app update
+   chip. Builds before signing was enabled need a one-time manual install.
 
 ## Architectures
 

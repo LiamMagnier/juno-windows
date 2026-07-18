@@ -66,7 +66,12 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
         await get().downloadAndInstall();
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      const raw = err instanceof Error ? err.message : String(err);
+      // Surface a clearer message for the common "release json missing / 404"
+      // failure (Tauri's wording is "could not fetch a valid release json…").
+      const message = /valid release json|release.?json|404|not found/i.test(raw)
+        ? `Could not reach the update server (${raw}). Check your network, or install the latest build from the website.`
+        : raw;
       // Missing pubkey / no network: stay quiet on background checks.
       set({ phase: quiet ? { kind: "idle" } : { kind: "error", message } });
       pendingUpdate = null;

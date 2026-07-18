@@ -84,6 +84,11 @@ jobs:
           if-no-files-found: error
 
       # ---- Tag releases: attach installer + latest.json for auto-update ----
+      # Tauri v2 (createUpdaterArtifacts: true) reuses the NSIS setup.exe as the
+      # update bundle and writes setup.exe.sig next to it. The old v1Compatible
+      # path used *.nsis.zip — that file is NOT produced in v2 mode, so looking
+      # only for the zip left latest.json missing and every in-app update check
+      # failed with "could not fetch a valid release json from the remote".
       - name: Prepare release assets
         if: startsWith(github.ref, 'refs/tags/v')
         id: assets
@@ -93,29 +98,50 @@ jobs:
           NSIS="src-tauri/target/release/bundle/nsis"
           ls -la "$NSIS"
           VERSION="${GITHUB_REF_NAME#v}"
-          # Prefer the updater zip when present; fall back to the setup exe.
           INSTALLER=$(ls "$NSIS"/*-setup.exe 2>/dev/null | head -1 || true)
-          UPDATER_ZIP=$(ls "$NSIS"/*.nsis.zip 2>/dev/null | head -1 || true)
-          SIG=$(ls "$NSIS"/*.sig 2>/dev/null | head -1 || true)
-          # Some Tauri versions put the signature next to the zip as .nsis.zip.sig
-          if [[ -z "${SIG}" && -n "${UPDATER_ZIP}" && -f "${UPDATER_ZIP}.sig" ]]; then
-            SIG="${UPDATER_ZIP}.sig"
+          if [[ -z "${INSTALLER}" ]]; then
+            echo "::error::No NSIS setup.exe found under ${NSIS}"
+            exit 1
           fi
+
+          # Prefer Tauri v2 artifact (setup.exe + setup.exe.sig). Fall back to
+          # v1Compatible nsis.zip + nsis.zip.sig if present.
+          UPDATER_BUNDLE=""
+          SIG=""
+          if [[ -f "${INSTALLER}.sig" ]]; then
+            UPDATER_BUNDLE="${INSTALLER}"
+            SIG="${INSTALLER}.sig"
+          else
+            UPDATER_ZIP=$(ls "$NSIS"/*.nsis.zip 2>/dev/null | head -1 || true)
+            if [[ -n "${UPDATER_ZIP}" && -f "${UPDATER_ZIP}.sig" ]]; then
+              UPDATER_BUNDLE="${UPDATER_ZIP}"
+              SIG="${UPDATER_ZIP}.sig"
+            fi
+          fi
+
           echo "installer=${INSTALLER}" >> "$GITHUB_OUTPUT"
-          echo "updater_zip=${UPDATER_ZIP}" >> "$GITHUB_OUTPUT"
+          echo "updater_bundle=${UPDATER_BUNDLE}" >> "$GITHUB_OUTPUT"
           echo "sig=${SIG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-          if [[ -n "${UPDATER_ZIP}" && -n "${SIG}" ]]; then
-            python - "$VERSION" "$UPDATER_ZIP" "$SIG" "${{ github.repository }}" "${GITHUB_REF_NAME}" <<'PY'
+          if [[ -z "${UPDATER_BUNDLE}" || -z "${SIG}" ]]; then
+            echo "::error::Updater signature missing. Ensure TAURI_SIGNING_PRIVATE_KEY is set and createUpdaterArtifacts is true. Contents of ${NSIS}:"
+            ls -la "$NSIS"
+            exit 1
+          fi
+
+          python - "$VERSION" "$UPDATER_BUNDLE" "$SIG" "${{ github.repository }}" "${GITHUB_REF_NAME}" <<'PY'
           import json, pathlib, sys, datetime
-          version, zip_path, sig_path, repo, tag = sys.argv[1:6]
+          version, bundle_path, sig_path, repo, tag = sys.argv[1:6]
           signature = pathlib.Path(sig_path).read_text(encoding="utf-8").replace("\r", "").strip()
-          url = f"https://github.com/{repo}/releases/download/{tag}/{pathlib.Path(zip_path).name}"
+          if not signature:
+              raise SystemExit(f"empty signature file: {sig_path}")
+          name = pathlib.Path(bundle_path).name
+          url = f"https://github.com/{repo}/releases/download/{tag}/{name}"
           payload = {
               "version": version,
               "notes": f"Juno for Windows {version}",
-              "pub_date": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "pub_date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "platforms": {
                   "windows-x86_64": {
                       "signature": signature,
@@ -123,14 +149,17 @@ jobs:
                   }
               },
           }
-          pathlib.Path("latest.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-          print(pathlib.Path("latest.json").read_text(encoding="utf-8"))
+          out = pathlib.Path("latest.json")
+          out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          # Sanity-check the shape the Tauri updater requires.
+          data = json.loads(out.read_text(encoding="utf-8"))
+          plat = data["platforms"]["windows-x86_64"]
+          assert data["version"], "version required"
+          assert plat["url"].startswith("https://"), "url must be https"
+          assert len(plat["signature"]) > 32, "signature too short"
+          print(out.read_text(encoding="utf-8"))
           PY
-            echo "has_updater=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_updater=false" >> "$GITHUB_OUTPUT"
-            echo "WARN: updater zip/signature missing — release will ship installer only"
-          fi
+          echo "has_updater=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -139,7 +168,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Juno for Windows ${{ github.ref_name }}
           generate_release_notes: true
-          fail_on_unmatched_files: false
+          # latest.json is required for in-app auto-update — fail if missing.
+          fail_on_unmatched_files: true
           files: |
             src-tauri/target/release/bundle/nsis/*
             latest.json
