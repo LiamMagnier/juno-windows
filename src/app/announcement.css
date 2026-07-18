@@ -2,9 +2,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  background: hsl(var(--primary) / 0.08);
-  border-bottom: 1px solid hsl(var(--hairline));
+  padding: 8px 14px;
+  background: linear-gradient(90deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05));
+  border-bottom: 1px solid hsl(var(--primary) / 0.12);
   font-size: var(--text-caption);
   flex: none;
 }

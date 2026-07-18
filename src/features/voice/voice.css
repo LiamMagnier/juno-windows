@@ -3,14 +3,15 @@
 .voice-panel {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 14px;
+  padding: 14px;
   max-height: 180px;
   background: hsl(var(--card));
+  background-image: linear-gradient(180deg, hsl(var(--sheen) / 0.55), transparent 42%);
   border: 1px solid hsl(var(--hairline-strong));
-  border-radius: var(--radius-float);
-  box-shadow: var(--shadow-pop);
-  animation: voice-rise-in var(--dur-base) var(--ease-out-expo);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 hsl(var(--sheen)), var(--shadow-float);
+  animation: voice-rise-in var(--dur-slow) var(--ease-out-expo);
 }
 
 @keyframes voice-rise-in {

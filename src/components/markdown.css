@@ -85,18 +85,25 @@
 /* Per-block copy affordance (hover-revealed; the language eyebrow yields). */
 .markdown .md-code .md-copy {
   position: absolute;
-  top: 4px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
+  font-family: var(--font-mono);
   font-size: 10px;
   line-height: 1.4;
-  padding: 2px 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
   color: hsl(var(--muted-foreground));
-  background: hsl(var(--muted));
-  border: 1px solid hsl(var(--hairline));
-  border-radius: 4px;
+  background: hsl(var(--card) / 0.9);
+  border: 1px solid hsl(var(--hairline-strong));
+  border-radius: 8px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity var(--dur-fast) ease;
+  box-shadow: var(--shadow-soft);
+  transition:
+    opacity var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft);
 }
 
 .markdown .md-code:hover .md-copy,
