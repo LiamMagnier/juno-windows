@@ -1,10 +1,12 @@
-/* Application menu bar — sits in the titlebar drag region (no-drag itself). */
+/* Application menu bar — File · Edit · View · Go · … (no-drag inside titlebar). */
 .menubar {
   display: flex;
   align-items: stretch;
-  gap: 1px;
+  gap: 0;
+  padding-inline: 2px 8px;
   -webkit-app-region: no-drag;
   app-region: no-drag;
+  flex: none;
 }
 .menubar-item-wrap {
   position: relative;

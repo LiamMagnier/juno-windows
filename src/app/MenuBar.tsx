@@ -1,9 +1,6 @@
 /**
- * Windows application menu bar (File · Edit · View · Conversation · Window ·
- * Help), rendered inside the custom titlebar. Items are wired to the app's real
- * stores and Tauri window commands — no dead entries. Standard menu-bar
- * behaviour: click to open, hover to switch once open, Escape / click-away to
- * close, Alt underlines deferred to the OS.
+ * Windows application menu bar (File · Edit · View · Go · Conversation ·
+ * Window · Help). Items are wired to real stores/commands — no dead entries.
  */
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -11,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUiStore } from "@/state/uiStore";
 import { useAuthStore } from "@/state/authStore";
+import { useUpdateStore } from "@/lib/updater";
 import { startNewChat } from "@/features/sidebar/conversationActions";
 import { backendBaseUrl } from "@/lib/backend/config";
 import "./menubar.css";
@@ -21,6 +19,7 @@ interface MenuItem {
   run?: () => void;
   danger?: boolean;
   separatorBefore?: boolean;
+  disabled?: boolean;
 }
 interface Menu {
   id: string;
@@ -28,7 +27,6 @@ interface Menu {
   items: MenuItem[];
 }
 
-/** Insert text at the caret of the focused input/textarea/contenteditable. */
 async function pasteFromClipboard() {
   const el = document.activeElement as HTMLElement | null;
   let text = "";
@@ -55,8 +53,13 @@ export function MenuBar() {
 
   const setTheme = useUiStore((s) => s.setTheme);
   const setMode = useUiStore((s) => s.setMode);
+  const setView = useUiStore((s) => s.setView);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const openSettings = useUiStore((s) => s.openSettings);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const updatePhase = useUpdateStore((s) => s.phase);
+  const checkForUpdates = useUpdateStore((s) => s.checkForUpdates);
+  const relaunchToUpdate = useUpdateStore((s) => s.relaunchToUpdate);
 
   const close = useCallback(() => setOpen(null), []);
 
@@ -88,10 +91,49 @@ export function MenuBar() {
       label: "File",
       items: [
         { label: "New chat", shortcut: "Ctrl+N", run: () => startNewChat() },
-        { label: "New code session", shortcut: "Ctrl+Shift+N", run: () => setMode("code") },
-        { label: "Open Quick composer", shortcut: "Ctrl+Space", separatorBefore: true, run: () => void invoke("quick_show").catch(() => {}) },
+        {
+          label: "New code session",
+          shortcut: "Ctrl+Shift+N",
+          run: () => {
+            setMode("code");
+            setView({ kind: "code" });
+          },
+        },
+        {
+          label: "New project",
+          separatorBefore: true,
+          run: () => {
+            setMode("chat");
+            setView({ kind: "projects" });
+          },
+        },
+        {
+          label: "Open Quick composer",
+          shortcut: "Ctrl+Space",
+          separatorBefore: true,
+          run: () => void invoke("quick_show").catch(() => {}),
+        },
+        {
+          label: "Search…",
+          shortcut: "Ctrl+K",
+          run: () => {
+            // Search palette is opened via the same Ctrl+K path in the sidebar.
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+          },
+        },
         { label: "Settings", shortcut: "Ctrl+,", separatorBefore: true, run: () => openSettings(true) },
-        { label: "Sign out", separatorBefore: true, danger: true, run: () => void useAuthStore.getState().signOut() },
+        {
+          label: "Sign out",
+          separatorBefore: true,
+          danger: true,
+          run: () => void useAuthStore.getState().signOut(),
+        },
+        {
+          label: "Quit Juno",
+          shortcut: "Alt+F4",
+          separatorBefore: true,
+          run: () => void win.close(),
+        },
       ],
     },
     {
@@ -100,22 +142,110 @@ export function MenuBar() {
       items: [
         { label: "Undo", shortcut: "Ctrl+Z", run: () => document.execCommand("undo") },
         { label: "Redo", shortcut: "Ctrl+Y", run: () => document.execCommand("redo") },
-        { label: "Cut", shortcut: "Ctrl+X", separatorBefore: true, run: () => document.execCommand("cut") },
+        {
+          label: "Cut",
+          shortcut: "Ctrl+X",
+          separatorBefore: true,
+          run: () => document.execCommand("cut"),
+        },
         { label: "Copy", shortcut: "Ctrl+C", run: () => document.execCommand("copy") },
         { label: "Paste", shortcut: "Ctrl+V", run: () => void pasteFromClipboard() },
-        { label: "Select all", shortcut: "Ctrl+A", run: () => document.execCommand("selectAll") },
+        {
+          label: "Select all",
+          shortcut: "Ctrl+A",
+          run: () => document.execCommand("selectAll"),
+        },
       ],
     },
     {
       id: "view",
       label: "View",
       items: [
-        { label: "Toggle sidebar", shortcut: "Ctrl+B", run: () => toggleSidebar() },
-        { label: "Light theme", separatorBefore: true, run: () => setTheme("light") },
+        {
+          label: sidebarCollapsed ? "Show sidebar" : "Hide sidebar",
+          shortcut: "Ctrl+B",
+          run: () => toggleSidebar(),
+        },
+        {
+          label: "Light theme",
+          separatorBefore: true,
+          run: () => setTheme("light"),
+        },
         { label: "Dark theme", run: () => setTheme("dark") },
         { label: "Match system", run: () => setTheme("system") },
-        { label: "Go to Chats", shortcut: "Ctrl+1", separatorBefore: true, run: () => setMode("chat") },
-        { label: "Go to Code", shortcut: "Ctrl+2", run: () => setMode("code") },
+        {
+          label: "Zoom in",
+          shortcut: "Ctrl+=",
+          separatorBefore: true,
+          run: () => void invoke("window_zoom", { delta: 0.1 }).catch(() => {
+            document.body.style.zoom = String(Math.min(1.4, (Number(document.body.style.zoom) || 1) + 0.1));
+          }),
+        },
+        {
+          label: "Zoom out",
+          shortcut: "Ctrl+-",
+          run: () => {
+            document.body.style.zoom = String(Math.max(0.8, (Number(document.body.style.zoom) || 1) - 0.1));
+          },
+        },
+        {
+          label: "Reset zoom",
+          shortcut: "Ctrl+0",
+          run: () => {
+            document.body.style.zoom = "1";
+          },
+        },
+      ],
+    },
+    {
+      id: "go",
+      label: "Go",
+      items: [
+        {
+          label: "Chats",
+          shortcut: "Ctrl+1",
+          run: () => {
+            setMode("chat");
+            setView({ kind: "chat" });
+          },
+        },
+        {
+          label: "Code",
+          shortcut: "Ctrl+2",
+          run: () => {
+            setMode("code");
+            setView({ kind: "code" });
+          },
+        },
+        {
+          label: "Projects",
+          separatorBefore: true,
+          run: () => {
+            setMode("chat");
+            setView({ kind: "projects" });
+          },
+        },
+        {
+          label: "Memory",
+          run: () => {
+            setMode("chat");
+            setView({ kind: "memory" });
+          },
+        },
+        {
+          label: "Connectors",
+          run: () => {
+            setMode("chat");
+            setView({ kind: "connectors" });
+          },
+        },
+        {
+          label: "Scheduled tasks",
+          run: () => {
+            setMode("chat");
+            setView({ kind: "tasks" });
+          },
+        },
       ],
     },
     {
@@ -123,9 +253,21 @@ export function MenuBar() {
       label: "Conversation",
       items: [
         { label: "New chat", shortcut: "Ctrl+N", run: () => startNewChat() },
-        { label: "Memory", separatorBefore: true, run: () => useUiStore.getState().setView({ kind: "memory" }) },
-        { label: "Connectors", run: () => useUiStore.getState().setView({ kind: "connectors" }) },
-        { label: "Scheduled tasks", run: () => useUiStore.getState().setView({ kind: "tasks" }) },
+        {
+          label: "Private chat",
+          separatorBefore: true,
+          run: () => {
+            setMode("chat");
+            setView({ kind: "chat" });
+            // Private mode is toggled from the composer; open a fresh thread first.
+            startNewChat();
+          },
+        },
+        {
+          label: "Open settings…",
+          separatorBefore: true,
+          run: () => openSettings(true),
+        },
       ],
     },
     {
@@ -134,17 +276,39 @@ export function MenuBar() {
       items: [
         { label: "Minimize", run: () => void win.minimize() },
         { label: "Maximize / Restore", run: () => void win.toggleMaximize() },
-        { label: "Close window", shortcut: "Ctrl+W", separatorBefore: true, run: () => void win.close() },
+        {
+          label: "Close window",
+          shortcut: "Ctrl+W",
+          separatorBefore: true,
+          run: () => void win.close(),
+        },
       ],
     },
     {
       id: "help",
       label: "Help",
       items: [
-        { label: "Juno help", run: () => void openUrl(`${backendBaseUrl()}/help`) },
-        { label: "Keyboard shortcuts", run: () => void openUrl(`${backendBaseUrl()}/help/shortcuts`) },
-        { label: "What's new", run: () => void openUrl(`${backendBaseUrl()}/changelog`) },
-        { label: "About Juno for Windows", separatorBefore: true, run: () => void openUrl(backendBaseUrl()) },
+        {
+          label: updatePhase.kind === "ready" ? `Relaunch to update (${updatePhase.version})` : "Check for updates…",
+          run: () => {
+            if (updatePhase.kind === "ready") void relaunchToUpdate();
+            else void checkForUpdates({ quiet: false });
+          },
+        },
+        {
+          label: "Juno on the web",
+          separatorBefore: true,
+          run: () => void openUrl(backendBaseUrl()),
+        },
+        {
+          label: "Account & plan",
+          run: () => void openUrl(`${backendBaseUrl()}/profile`),
+        },
+        {
+          label: "About Juno for Windows",
+          separatorBefore: true,
+          run: () => void openUrl(backendBaseUrl()),
+        },
       ],
     },
   ];
@@ -169,16 +333,21 @@ export function MenuBar() {
             {isOpen ? (
               <div id={`${baseId}-${menu.id}`} className="menubar-flyout" role="menu">
                 {menu.items.map((item, i) => (
-                  <div key={item.label} role="none">
-                    {item.separatorBefore && i > 0 ? <div className="menubar-sep" role="separator" /> : null}
+                  <div key={`${menu.id}-${item.label}`} role="none">
+                    {item.separatorBefore && i > 0 ? (
+                      <div className="menubar-sep" role="separator" />
+                    ) : null}
                     <button
                       type="button"
                       role="menuitem"
                       className={item.danger ? "menubar-row menubar-row-danger" : "menubar-row"}
+                      disabled={item.disabled}
                       onClick={act(() => item.run?.())}
                     >
                       <span className="menubar-row-label">{item.label}</span>
-                      {item.shortcut ? <span className="menubar-row-key">{item.shortcut}</span> : null}
+                      {item.shortcut ? (
+                        <span className="menubar-row-key">{item.shortcut}</span>
+                      ) : null}
                     </button>
                   </div>
                 ))}

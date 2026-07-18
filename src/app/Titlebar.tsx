@@ -4,12 +4,12 @@ import { SquarePen } from "lucide-react";
 import { DotMatrixMark } from "@/components/signature/DotMatrix";
 import { startNewChat } from "@/features/sidebar/conversationActions";
 import { useUiStore } from "@/state/uiStore";
+import { MenuBar } from "./MenuBar";
 import "./titlebar.css";
 
 /**
- * Custom Windows titlebar: drag region + Fluent caption buttons.
- * data-tauri-drag-region gives native drag + double-click maximize + the
- * OS snap behaviors that come with system move (Win+arrows always work).
+ * Custom Windows titlebar: identity + application menu (File · Edit · View …)
+ * + drag region + Fluent caption buttons.
  */
 export function Titlebar() {
   const [maximized, setMaximized] = useState(false);
@@ -17,8 +17,6 @@ export function Titlebar() {
   useEffect(() => {
     const win = getCurrentWindow();
     let unlisten: (() => void) | undefined;
-    // A maximized/snapped window is square-cropped by the OS, so drop the
-    // app-frame's rounded corners to match (see app.css --window-radius).
     const sync = (isMax: boolean) => {
       setMaximized(isMax);
       document.documentElement.toggleAttribute("data-maximized", isMax);
@@ -44,11 +42,17 @@ export function Titlebar() {
 
   return (
     <header className="titlebar" data-tauri-drag-region>
-      <div className="titlebar-identity">
-        <span className="titlebar-mark"><DotMatrixMark size={18} /></span>
+      <div className="titlebar-identity" data-tauri-drag-region>
+        <span className="titlebar-mark">
+          <DotMatrixMark size={18} />
+        </span>
         <span className="titlebar-title">Juno</span>
       </div>
+
+      <MenuBar />
+
       <div className="titlebar-drag" data-tauri-drag-region />
+
       <div className="titlebar-actions">
         <button
           type="button"
@@ -61,6 +65,7 @@ export function Titlebar() {
           <span>New chat</span>
         </button>
       </div>
+
       <div className="titlebar-captions" role="group" aria-label="Window controls">
         <button type="button" className="caption-button" aria-label="Minimize" onClick={minimize}>
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">

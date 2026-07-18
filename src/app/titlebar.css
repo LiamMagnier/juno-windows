@@ -1,8 +1,8 @@
 .titlebar {
   display: flex;
   align-items: stretch;
-  height: 46px;
-  flex: 0 0 46px;
+  height: 40px;
+  flex: 0 0 40px;
   gap: 0;
   background: var(--titlebar-fill);
   border-bottom: 1px solid hsl(var(--hairline));
@@ -14,10 +14,12 @@
 .titlebar-identity {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 224px;
-  padding-inline: 14px 10px;
+  gap: 9px;
+  width: auto;
+  min-width: 96px;
+  padding-inline: 12px 6px;
   min-width: 0;
+  -webkit-app-region: drag;
 }
 
 .titlebar-mark {
@@ -88,7 +90,7 @@
 
 .caption-button {
   width: 46px;
-  height: 46px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
