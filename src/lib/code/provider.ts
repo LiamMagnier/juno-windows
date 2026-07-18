@@ -76,8 +76,9 @@ class AnthropicWire implements AgentProvider {
 
   async *stream(req: ProviderRequest): AsyncGenerator<ProviderStreamEvent> {
     const body = {
+      // No plan cap on replies — default to Claude's native 64k output ceiling.
       model: req.model,
-      max_tokens: req.maxTokens ?? 8192,
+      max_tokens: req.maxTokens ?? 64000,
       stream: true,
       system: req.system,
       messages: toAnthropicMessages(req.messages),
@@ -224,7 +225,8 @@ class OpenAiWire implements AgentProvider {
       model: req.model,
       stream: true,
       stream_options: { include_usage: true },
-      max_tokens: req.maxTokens ?? 8192,
+      // No plan cap on replies — default to the native output ceiling.
+      max_tokens: req.maxTokens ?? 32000,
       messages: toOpenAiMessages(req.system, req.messages),
       tools: req.tools.map((t) => ({
         type: "function",
