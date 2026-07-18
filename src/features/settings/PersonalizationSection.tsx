@@ -59,9 +59,8 @@ export function PersonalizationSection() {
 
       <DebouncedTextSetting
         label="Custom instructions"
-        hint="Preferences and context Juno should keep in mind in every chat."
+        hint="Preferences and context Juno should keep in mind in every chat. No character cap — long curricula and system prompts are fine."
         value={settings?.customInstructions ?? ""}
-        maxLength={4000}
         multiline
         showCount
         placeholder="Anything Juno should know about you or how to respond"

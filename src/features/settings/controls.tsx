@@ -105,7 +105,8 @@ export function DebouncedTextSetting({
   hint?: string;
   value: string;
   placeholder?: string;
-  maxLength: number;
+  /** Omit for no character cap (model context is the real limit). */
+  maxLength?: number;
   multiline?: boolean;
   showCount?: boolean;
   onCommit(next: string): void;
@@ -123,7 +124,7 @@ export function DebouncedTextSetting({
   const commit = useCallback(
     (next: string) => {
       dirty.current = false;
-      const clamped = next.slice(0, maxLength);
+      const clamped = maxLength != null ? next.slice(0, maxLength) : next;
       if (clamped === value) return;
       onCommit(clamped);
       markSaved();
@@ -155,7 +156,7 @@ export function DebouncedTextSetting({
     <textarea
       className="settings-textarea"
       value={draft}
-      maxLength={maxLength}
+      {...(maxLength != null ? { maxLength } : {})}
       {...(placeholder !== undefined ? { placeholder } : {})}
       onChange={(e) => schedule(e.target.value)}
       onBlur={flush}
@@ -165,7 +166,7 @@ export function DebouncedTextSetting({
     <input
       type="text"
       value={draft}
-      maxLength={maxLength}
+      {...(maxLength != null ? { maxLength } : {})}
       {...(placeholder !== undefined ? { placeholder } : {})}
       onChange={(e) => schedule(e.target.value)}
       onBlur={flush}
@@ -184,9 +185,11 @@ export function DebouncedTextSetting({
         {hint ? <span className="settings-row-hint">{hint}</span> : <span />}
         {showCount ? (
           <span
-            className={`settings-count${draft.length > maxLength * 0.9 ? " is-warning" : ""}`}
+            className={`settings-count${maxLength != null && draft.length > maxLength * 0.9 ? " is-warning" : ""}`}
           >
-            {draft.length}/{maxLength}
+            {maxLength != null
+              ? `${draft.length}/${maxLength}`
+              : `${draft.length.toLocaleString()} chars`}
           </span>
         ) : null}
       </div>

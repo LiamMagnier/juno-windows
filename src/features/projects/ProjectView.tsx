@@ -26,7 +26,7 @@ import { formatSize, relativeTime } from "./format";
 import "./projects.css";
 
 const NAME_MAX = 160;
-const INSTRUCTIONS_MAX = 50_000;
+const INSTRUCTIONS_SOFT_WARN = 50_000;
 
 export function ProjectView({ projectId }: { projectId: string }) {
   const setView = useUiStore((s) => s.setView);
@@ -152,7 +152,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
       return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
     });
 
-  const nearLimit = instructions.length > INSTRUCTIONS_MAX * 0.9;
+  const nearLimit = instructions.length > INSTRUCTIONS_SOFT_WARN;
 
   return (
     <div className="projects-page project-detail">
@@ -213,14 +213,13 @@ export function ProjectView({ projectId }: { projectId: string }) {
               className="project-instructions"
               rows={6}
               value={instructions}
-              maxLength={INSTRUCTIONS_MAX}
               aria-label="Project instructions"
               placeholder="Add instructions, background, or preferences for this project"
               onChange={(e) => setInstructions(e.target.value)}
               onBlur={saveInstructions}
             />
             <span className={`project-char-count${nearLimit ? " warn" : ""}`}>
-              {instructions.length.toLocaleString()} / {INSTRUCTIONS_MAX.toLocaleString()}
+              {instructions.length.toLocaleString()} chars
             </span>
           </section>
 

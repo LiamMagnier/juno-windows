@@ -211,6 +211,8 @@ function MessageItem({
   const [editText, setEditText] = useState(message.content);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  /** Huge user pastes stay collapsed in the DOM until expanded. */
+  const [userExpanded, setUserExpanded] = useState(false);
 
   // ---- version pager ----
   const versionCount = message.versions?.length ?? 0;
@@ -396,8 +398,32 @@ function MessageItem({
               displayedContent === null ? (
                 <VersionLoading loading={versionsLoading} error={versionsError} retry={loadVersions} />
               ) : (
-                displayedContent
+                (() => {
+                  const body = displayedContent;
+                  if (body.length > 12_000 && !userExpanded) {
+                    return (
+                      <>
+                        {body.slice(0, 12_000)}
+                        {"\n\n"}… ({body.length.toLocaleString()} characters —{" "}
+                        <button type="button" className="chat-inline-link" onClick={() => setUserExpanded(true)}>
+                          expand
+                        </button>
+                        )
+                      </>
+                    );
+                  }
+                  return body;
+                })()
               )
+            ) : message.content.length > 12_000 && !userExpanded ? (
+              <>
+                {message.content.slice(0, 12_000)}
+                {"\n\n"}… ({message.content.length.toLocaleString()} characters —{" "}
+                <button type="button" className="chat-inline-link" onClick={() => setUserExpanded(true)}>
+                  expand
+                </button>
+                )
+              </>
             ) : (
               message.content
             )}

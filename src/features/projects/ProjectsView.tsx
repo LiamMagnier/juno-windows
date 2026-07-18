@@ -15,7 +15,6 @@ import { relativeTime } from "./format";
 import "./projects.css";
 
 const NAME_MAX = 160;
-const INSTRUCTIONS_MAX = 50_000;
 
 type LoadPhase = "loading" | "ready" | "error";
 
@@ -68,7 +67,7 @@ export function ProjectsView() {
   const createProject = () => {
     const name = newName.trim().slice(0, NAME_MAX);
     if (!name) return;
-    const instructions = newInstructions.trim().slice(0, INSTRUCTIONS_MAX);
+    const instructions = newInstructions.trim();
     const id = crypto.randomUUID();
     useDataStore.getState().upsertProject({
       id,
@@ -290,7 +289,6 @@ export function ProjectsView() {
             id="projects-new-instructions"
             rows={4}
             value={newInstructions}
-            maxLength={INSTRUCTIONS_MAX}
             onChange={(e) => setNewInstructions(e.target.value)}
             placeholder="Shared context every chat in this project will follow"
           />

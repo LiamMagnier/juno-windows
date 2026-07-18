@@ -1332,7 +1332,7 @@ export function QuickApp() {
               ref={textareaRef}
               value={draft}
               onChange={(event) => {
-                setDraft(event.target.value.slice(0, 50_000));
+                setDraft(event.target.value);
                 if (localPhase === "error") setLocalPhase("idle");
               }}
               onPaste={(event) => {
@@ -1345,7 +1345,6 @@ export function QuickApp() {
               }}
               placeholder={privateMode ? "Ask privately…" : "Ask Juno anything…"}
               rows={2}
-              maxLength={50_000}
               aria-label="Message Juno"
               autoFocus
               readOnly={replayLocked}
