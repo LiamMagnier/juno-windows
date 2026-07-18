@@ -1099,7 +1099,7 @@ export function QuickApp() {
         </div>
         <div className="quick-header-actions">
           <span className="quick-shortcut" aria-label="Global shortcut">
-            {nativeSettings?.shortcut ?? "Ctrl+Shift+Space"}
+            {nativeSettings?.shortcut ?? "Ctrl+Space"}
           </span>
           <button className="quick-icon-button" aria-label="New conversation" onClick={newConversation}>
             <Plus size={16} aria-hidden />

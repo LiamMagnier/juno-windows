@@ -17,14 +17,41 @@ body {
      so a missing native backdrop never leaves the window see-through. */
   background: transparent;
   color: hsl(var(--foreground));
+  /* Newsreader serif is the whole UI (font-sans === font-serif on purpose). */
   font-family: var(--font-sans);
+  font-optical-sizing: auto;
   font-size: var(--text-body);
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
   user-select: none;
   cursor: default;
+}
+
+/* App-wide film grain (~2%): the subliminal "paper" cue. Quiet, fixed,
+   non-interactive. Dropped under forced-colors. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (forced-colors: active) {
+  body::after { display: none; }
+}
+
+/* Mono metadata eyebrow — the Juno metadata voice (THINKING, TOKENS, SOURCE…). */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Text content areas opt back into selection. */

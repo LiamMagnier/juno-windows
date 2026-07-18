@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./design/tokens.css";
+import "./design/fonts.css";
 import "./design/base.css";
 
 // Each Tauri window loads the same tiny entry, then imports only its surface.

@@ -1,0 +1,87 @@
+/* Application menu bar — sits in the titlebar drag region (no-drag itself). */
+.menubar {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.menubar-item-wrap {
+  position: relative;
+  display: flex;
+}
+.menubar-item {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1;
+  color: hsl(var(--foreground) / 0.82);
+  transition: background var(--dur-fast) var(--ease-out-soft), color var(--dur-fast);
+}
+.menubar-item:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+.menubar-item[aria-expanded="true"] {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--foreground));
+}
+
+.menubar-flyout {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 500;
+  min-width: 232px;
+  padding: 6px;
+  border-radius: var(--radius-menu);
+  background: var(--flyout-fill);
+  backdrop-filter: blur(var(--flyout-blur, 20px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--flyout-blur, 20px)) saturate(1.3);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-glass);
+  animation: menubar-pop var(--dur-base) var(--ease-out-soft);
+}
+@keyframes menubar-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menubar-flyout { animation: none; }
+}
+
+.menubar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  color: hsl(var(--foreground) / 0.92);
+  text-align: left;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.menubar-row:hover {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--foreground));
+}
+.menubar-row-danger:hover {
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+}
+.menubar-row-label {
+  flex: 1;
+}
+.menubar-row-key {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: hsl(var(--muted-foreground));
+}
+.menubar-sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+}

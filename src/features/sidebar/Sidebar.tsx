@@ -5,11 +5,11 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Brain,
   Clock,
   CodeXml,
   Folder,
   MessageSquare,
+  NotebookPen,
   Plug,
   Plus,
   Search,
@@ -48,7 +48,7 @@ const NAV_ROWS: NavRow[] = [
   {
     key: "memory",
     label: "Memory",
-    icon: <Brain size={16} />,
+    icon: <NotebookPen size={16} />,
     view: { kind: "memory" },
     selected: (v) => v.kind === "memory",
   },

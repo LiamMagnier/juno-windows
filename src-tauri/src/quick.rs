@@ -31,7 +31,7 @@ pub const SETTINGS_CHANGED_EVENT: &str = "juno://quick-settings-changed";
 pub const OPEN_CONVERSATION_EVENT: &str = "juno://open-conversation";
 pub const OPEN_SETTINGS_EVENT: &str = "juno://open-settings";
 
-const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+Space";
+const DEFAULT_SHORTCUT: &str = "Ctrl+Space";
 const TRIGGER_DEBOUNCE: Duration = Duration::from_millis(240);
 const COMPACT_HEIGHT: f64 = 188.0;
 const EXPANDED_HEIGHT: f64 = 440.0;
@@ -1134,6 +1134,17 @@ pub fn quick_hide<R: Runtime>(
 ) -> Result<(), CommandError> {
     require_label(&window, &[QUICK_LABEL])?;
     hide_quick(&app, true);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn quick_show<R: Runtime>(
+    window: WebviewWindow<R>,
+    app: AppHandle<R>,
+) -> Result<(), CommandError> {
+    // Openable from the main window's menu bar (File → Open Quick composer).
+    require_label(&window, &[MAIN_LABEL, QUICK_LABEL])?;
+    show_quick(&app);
     Ok(())
 }
 

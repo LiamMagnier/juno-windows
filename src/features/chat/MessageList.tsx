@@ -46,6 +46,7 @@ import { editAndResend, sendFeedback } from "@/lib/chat/chatEngine";
 import { useThreadStore, type GenerationStatus } from "@/state/threadStore";
 import { Markdown } from "@/components/Markdown";
 import { useContextMenu, type MenuItem } from "@/components/ContextMenu";
+import { ThinkingDots } from "@/components/signature/ThinkingDots";
 import { domainOf, formatBytes } from "./helpers";
 import { fileUrl } from "./fileUrl";
 
@@ -446,8 +447,12 @@ function MessageItem({
 
       {streaming && !message.content && !message.reasoning ? (
         <div className="chat-stream-status" role="status">
-          <Loader2 size={13} className="chat-spin" aria-hidden />
-          {status === "writing" ? "Writing" : status === "thinking" ? "Thinking" : "Checking"}
+          <ThinkingDots
+            label={status === "writing" ? "Writing" : status === "thinking" ? "Thinking" : "Checking"}
+          />
+          <span className="chat-stream-label eyebrow">
+            {status === "writing" ? "Writing" : status === "thinking" ? "Thinking" : "Checking"}
+          </span>
         </div>
       ) : null}
 

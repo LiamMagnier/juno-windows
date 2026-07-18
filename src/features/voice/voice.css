@@ -32,6 +32,12 @@
   justify-content: center;
 }
 
+/* The website's VoiceOrb (matte blue field + waveform). */
+.voice-orb-mark {
+  width: 42px;
+  height: 42px;
+}
+
 .voice-orb {
   /* Glow alpha is driven inline from the real session amplitude. */
   --orb-color: var(--primary);

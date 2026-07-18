@@ -123,6 +123,7 @@ pub fn run() {
             quick::quick_get_settings,
             quick::quick_update_settings,
             quick::quick_hide,
+            quick::quick_show,
             quick::quick_open_main,
             quick::quick_main_startup,
             quick::quick_quit,

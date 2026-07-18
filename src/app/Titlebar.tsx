@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { DotMatrixMark } from "@/components/signature/DotMatrix";
+import { MenuBar } from "./MenuBar";
 import "./titlebar.css";
 
 /**
@@ -36,11 +38,12 @@ export function Titlebar() {
 
   return (
     <header className="titlebar" data-tauri-drag-region>
-      <div className="titlebar-identity" data-tauri-drag-region>
-        <span className="titlebar-title" data-tauri-drag-region>
-          Juno
-        </span>
+      <div className="titlebar-identity">
+        <DotMatrixMark size={20} />
+        <span className="titlebar-title">Juno</span>
       </div>
+      <MenuBar />
+      <div className="titlebar-drag" data-tauri-drag-region />
       <div className="titlebar-captions" role="group" aria-label="Window controls">
         <button type="button" className="caption-button" aria-label="Minimize" onClick={minimize}>
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">

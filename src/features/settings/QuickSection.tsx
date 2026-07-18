@@ -104,8 +104,8 @@ export function QuickSection() {
             type="button"
             className="btn btn-secondary btn-icon"
             aria-label="Reset Quick shortcut"
-            disabled={busy || settings.shortcut === "Ctrl+Shift+Space"}
-            onClick={() => void update({ shortcut: "Ctrl+Shift+Space" })}
+            disabled={busy || settings.shortcut === "Ctrl+Space"}
+            onClick={() => void update({ shortcut: "Ctrl+Space" })}
           >
             <RotateCcw size={14} aria-hidden />
           </button>

@@ -1,0 +1,131 @@
+/*
+ * Juno signature layer — dot constellation, effort meter, and voice orb.
+ * Motion mirrors the website (tailwind.config.ts): dot-think 2.1s / dot-tint
+ * 3.4s / dot-breathe 5.6s run out of phase so the cluster never reads as a
+ * loop; drift 18s carries the empty-state hero. All behind prefers-reduced-motion.
+ */
+
+/* ---- Thinking constellation (the "Juno is thinking" mark) ---- */
+.juno-tdots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: var(--dot-gap);
+  color: hsl(var(--muted-foreground));
+}
+.juno-tdots-breathe { display: flex; }
+.juno-tdots-dot {
+  position: relative;
+  display: block;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: currentColor;
+}
+.juno-tdots-tint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .juno-tdots-breathe { animation: juno-dot-breathe 5.6s ease-in-out infinite; }
+  .juno-tdots-dot { animation: juno-dot-think 2.1s ease-in-out infinite; }
+  .juno-tdots-tint { animation: juno-dot-tint 3.4s ease-in-out infinite; }
+}
+
+@keyframes juno-dot-think {
+  0% { transform: translateY(0) scale(1); opacity: 0.35; }
+  18% { transform: translateY(-3.5px) scale(1.15); opacity: 1; }
+  40% { transform: translateY(0.5px) scale(0.97); opacity: 0.6; }
+  60%, 100% { transform: translateY(0) scale(1); opacity: 0.35; }
+}
+@keyframes juno-dot-tint {
+  0%, 30%, 100% { opacity: 0; }
+  12% { opacity: 0.85; }
+}
+@keyframes juno-dot-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.85); }
+}
+@keyframes juno-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-12px, 8px) rotate(-1.5deg); }
+}
+
+/* ---- Effort meter (reasoning-effort mark; replaces the brain glyph) ---- */
+.juno-effort {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 13px;
+  vertical-align: -2px;
+}
+.juno-effort > i {
+  display: block;
+  width: 3px;
+  border-radius: 2px;
+  background: hsl(var(--muted-foreground) / 0.5);
+  transition: height var(--dur-base) var(--ease-spring), background var(--dur-base);
+}
+.juno-effort > i:nth-child(1) { height: 5px; }
+.juno-effort > i:nth-child(2) { height: 8px; }
+.juno-effort > i:nth-child(3) { height: 12px; }
+.juno-effort[data-level="0"] > i { background: hsl(var(--muted-foreground) / 0.35); }
+.juno-effort[data-level="1"] > i:nth-child(1),
+.juno-effort[data-level="2"] > i:nth-child(1),
+.juno-effort[data-level="2"] > i:nth-child(2),
+.juno-effort[data-level="3"] > i { background: hsl(var(--primary)); }
+.juno-effort[data-tone="on"] > i { background: hsl(var(--primary)); }
+.juno-effort[data-ultra="true"] > i {
+  background: linear-gradient(180deg, hsl(var(--ultra-from)), hsl(var(--ultra-to))) !important;
+}
+
+/* ---- Voice orb (matte blue field + five-bar waveform) ---- */
+.juno-orb {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  isolation: isolate;
+}
+.juno-orb-ring {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: 50%;
+  border: 1px solid hsl(222 78% 62%);
+  opacity: var(--voice-ring-opacity, 0.14);
+  transform: scale(var(--voice-ring-scale, 1));
+  transition: border-color var(--dur-base);
+}
+.juno-orb[data-status="error"] .juno-orb-ring { border-color: hsl(var(--destructive)); }
+.juno-orb-core {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid hsl(0 0% 100% / 0.15);
+  color: #fff;
+  background: radial-gradient(circle at 30% 24%, hsl(190 88% 70%) 0%, hsl(222 78% 58%) 48%, hsl(263 62% 46%) 100%);
+  box-shadow: 0 2px 9px hsl(226 65% 44% / 0.24);
+  transform: scale(var(--voice-orb-scale, 1));
+  transition: filter var(--dur-base), opacity var(--dur-base);
+}
+.juno-orb[data-status="idle"] .juno-orb-core { opacity: 0.7; filter: saturate(0.35); }
+.juno-orb[data-status="error"] .juno-orb-core {
+  background: hsl(var(--destructive));
+  border-color: hsl(var(--destructive));
+  box-shadow: none;
+}
+.juno-orb-bars { display: flex; align-items: center; gap: 1.5px; height: 40%; }
+.juno-orb-bars > span {
+  display: block;
+  width: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+  height: var(--voice-bar, 6px);
+  transition: height var(--dur-fast) ease-out;
+}
