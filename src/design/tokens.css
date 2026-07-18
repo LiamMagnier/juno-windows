@@ -1,96 +1,113 @@
 /*
- * Juno design tokens — Windows adaptation.
+ * Juno design tokens — Windows client.
  *
- * The shared Juno language (warm graphite dark / warm paper light, one
- * terracotta accent, soft radii, quiet motion) translated to Fluent idioms:
- * Segoe UI Variable working type, a 4px spacing grid, restrained material,
- * and Windows interaction states (hover/pressed fills, focus ring).
+ * These are the *real* Juno values, ported verbatim from the website
+ * (juno/src/app/globals.css, tailwind.config.ts, design.md): warm paper (light)
+ * / warm charcoal (dark), one coral accent (15 54% 51% in BOTH themes),
+ * Newsreader serif as the whole UI type, JetBrains Mono for metadata, solid
+ * warm borders, the dot signature atoms, film-grain + sheen depth kit.
  *
- * Sources: juno/src/app/globals.css (web) and
- * juno-app/Juno/DesignSystem/Theme.swift (native graphite levels).
- * Colors are HSL triplets consumed as hsl(var(--token) / alpha).
+ * Windows adaptation is deliberately thin: a translucent warm-glass material
+ * for chrome (titlebar / flyouts), Fluent caption buttons, and forced-colors /
+ * reduced-transparency fallbacks. Colours are HSL triplets consumed as
+ * hsl(var(--token) / alpha). Token NAMES are stable — components depend on them.
  */
 
 :root {
   color-scheme: light;
 
-  /* ---- Surfaces (light: warm paper) ---- */
-  --background: 40 20% 98%;
-  --foreground: 30 8% 13%;
+  /* ---- Surfaces (warm paper) ---- */
+  --background: 48 33% 97%;
+  --foreground: 30 3% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 30 8% 13%;
+  --card-foreground: 30 3% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 30 8% 13%;
-  --secondary: 40 14% 95%;
-  --secondary-foreground: 30 8% 18%;
-  --muted: 40 14% 95%;
-  /* 42% (not the web's 44%): >=4.5:1 on both --background and --muted. */
-  --muted-foreground: 35 5% 42%;
-  --accent-surface: 40 18% 93%;
-  --accent-surface-foreground: 30 8% 18%;
+  --popover-foreground: 30 3% 12%;
+  --secondary: 50 23% 95%;
+  --secondary-foreground: 30 3% 18%;
+  --muted: 50 23% 95%;
+  --muted-foreground: 40 4% 40%;
+  /* --accent-surface is this app's name for the web's --accent (hover/highlight). */
+  --accent: 48 28% 92%;
+  --accent-foreground: 30 3% 18%;
+  --accent-surface: 48 28% 92%;
+  --accent-surface-foreground: 30 3% 18%;
 
-  /* ---- Accent (terracotta default; swappable via [data-accent]) ----
-     46% lightness (vs the shared 49%): white-on-primary and primary-on-bg
-     both clear WCAG AA while staying unmistakably terracotta. */
-  --primary: 15 56% 46%;
+  /* ---- Accent (coral default; identical in light + dark) ---- */
+  --primary: 15 54% 51%;
   --primary-foreground: 0 0% 100%;
-  --ring: 15 56% 46%;
+  --ring: 15 54% 51%;
 
   /* ---- Status ---- */
-  --destructive: 4 62% 50%;
+  --destructive: 11 51% 50%;
   --destructive-foreground: 0 0% 100%;
-  --success: 150 45% 38%;
+  --success: 140 33% 46%;
   --success-foreground: 0 0% 100%;
-  --warning: 36 70% 46%;
-  --source: 190 60% 36%;
-  --ultra: 258 90% 66%;
-  --ultra-from: 252 100% 68%;
-  --ultra-to: 271 91% 65%;
+  --warning: 40 57% 51%;
+  --warning-foreground: 40 57% 30%;
+  --source: 187 62% 34%;
+  /* Violet "ultra" — the top thinking tier (materially slower/pricier). */
+  --ultra: 249 59% 64%;
+  --ultra-from: 252 90% 66%;
+  --ultra-to: 271 70% 62%;
 
-  /* ---- Lines & fills ---- */
-  --border: 30 8% 13% / 0.08;
-  --input-border: 30 8% 13% / 0.10;
-  --hairline: 30 8% 13% / 0.07;
-  --hairline-strong: 30 8% 13% / 0.12;
-  --hover-fill: 30 8% 13% / 0.04;
-  --press-fill: 30 8% 13% / 0.07;
+  /* ---- Lines & fills (solid warm borders — the paper edge) ---- */
+  --border: 43 23% 88%;
+  --input: 43 23% 85%;
+  --input-border: 43 23% 85%;
+  --hairline: 30 12% 18% / 0.06;
+  --hairline-strong: 30 12% 18% / 0.12;
+  --hover-fill: 30 8% 13% / 0.045;
+  --press-fill: 30 8% 13% / 0.075;
+  --sheen: 0 0% 100% / 0.55;
 
   /* ---- Sidebar ---- */
-  --sidebar: 40 22% 97%;
-  --sidebar-foreground: 35 6% 34%;
-  --sidebar-border: 30 8% 13% / 0.07;
-  --sidebar-accent: 40 18% 92%;
+  --sidebar: 50 23% 95%;
+  --sidebar-foreground: 40 4% 30%;
+  --sidebar-border: 43 23% 88%;
+  --sidebar-accent: 48 28% 91%;
 
   /* ---- Titlebar / window chrome ---- */
-  --titlebar: 40 22% 97%;
+  --titlebar: 50 23% 95%;
   --caption-hover: 30 8% 13% / 0.06;
   --caption-press: 30 8% 13% / 0.10;
 
-  /* ---- Typography (Segoe UI Variable; optical sizes per Fluent) ---- */
-  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
-  --font-serif: "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --font-mono: "Cascadia Code", "Cascadia Mono", Consolas, "Courier New", monospace;
-  --text-caption: 12px;
-  --text-body: 14px;
-  --text-body-lg: 16px;
+  /* ---- Dot / ASCII signature atom ---- */
+  --dot-size: 5px;
+  --dot-gap: 3px;
+
+  /* ---- Typography (Newsreader everywhere; JetBrains Mono for metadata) ---- */
+  --font-sans: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --font-display: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  --text-caption: 11px;
+  --text-body: 15px;
+  --text-body-lg: 17px;
   --text-subtitle: 20px;
-  --text-title: 28px;
-  --text-greeting: 32px;
+  --text-title: 22px;
+  --text-greeting: 34px;
 
-  /* ---- Geometry (4px grid; Windows-restrained radii) ---- */
-  --radius-control: 6px;
-  --radius-card: 12px;
-  --radius-float: 16px;
+  /* ---- Geometry (Juno radius scale: 10 / 18 / 24 / 28 / popover 18 / menu 14) ---- */
+  --radius-control: 10px;
+  --radius-card: 18px;
+  --radius-float: 24px;
+  --radius-panel: 28px;
+  --radius-popover: 18px;
+  --radius-menu: 14px;
   --radius-full: 999px;
+  /* Legacy alias kept for the shell frame. */
+  --radius: 24px;
 
-  /* ---- Elevation (warm, low-throw in light) ---- */
+  /* ---- Elevation (warm, low-throw; 1px inner top-highlight on floats) ---- */
   --shadow-soft: 0 1px 2px hsl(30 10% 20% / 0.05), 0 4px 12px -4px hsl(30 10% 20% / 0.08);
   --shadow-float: 0 4px 14px -4px hsl(30 10% 16% / 0.12), 0 14px 36px -10px hsl(30 10% 16% / 0.14), inset 0 1px 0 hsl(0 0% 100% / 0.65);
+  --shadow-glass: 0 8px 32px -10px hsl(30 12% 12% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.55);
   --shadow-pop: 0 1px 1px hsl(30 12% 18% / 0.05), 0 2px 4px -1px hsl(30 12% 18% / 0.09), 0 8px 18px -8px hsl(30 12% 18% / 0.12);
+  --glow-primary: 0 1px 2px hsl(var(--primary) / 0.32), 0 5px 14px -5px hsl(var(--primary) / 0.42), 0 14px 30px -14px hsl(var(--primary) / 0.34);
   --well-inset: inset 0 1px 2px hsl(30 12% 18% / 0.07);
 
-  /* ---- Motion (shared Juno curves; fast + functional) ---- */
+  /* ---- Motion (shared Juno curves) ---- */
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -98,84 +115,80 @@
   --dur-base: 220ms;
   --dur-slow: 360ms;
 
-  /* ---- Windows 11 material (Mica base + Acrylic flyouts) ----
-     Chrome (titlebar/sidebar/flyouts) is a translucent tint over the window
-     backdrop; a backdrop-filter blur turns that into Acrylic. Alphas are tuned
-     to read the same whether the backdrop is real Mica (window transparent) or
-     the app's own opaque material (no native backdrop). `.no-transparency`
-     collapses all of this to solid fills. */
-  --acrylic-blur: 30px;
-  --acrylic-saturate: 1.8;
-  /* 0.5 (not thinner): caption glyphs sit on this over live Mica, so it has to
-     hold AA on a busy/light wallpaper, not just a calm one. */
-  --titlebar-fill: hsl(var(--titlebar) / 0.5);
-  --sidebar-fill: hsl(var(--sidebar) / 0.62);
-  --flyout-fill: hsl(var(--popover) / 0.80);
-  --flyout-blur: 26px;
-  /* The in-app Mica substitute: a warm wash used only when no OS backdrop is
-     available, so the translucent chrome still has something to blur. */
+  /* ---- Windows material: warm glass chrome over a paper Mica substitute ---- */
+  --acrylic-blur: 20px;
+  --acrylic-saturate: 1.3;
+  --titlebar-fill: hsl(var(--titlebar) / 0.72);
+  --sidebar-fill: hsl(var(--sidebar) / 0.9);
+  --flyout-fill: hsl(var(--popover) / 0.8);
+  --flyout-blur: 20px;
   --material-wash:
-    radial-gradient(120% 90% at 8% 0%, hsl(var(--primary) / 0.05), transparent 55%),
-    radial-gradient(120% 120% at 100% 100%, hsl(var(--ultra) / 0.035), transparent 50%);
-  --window-radius: 8px;
+    radial-gradient(120% 90% at 8% 0%, hsl(var(--primary) / 0.04), transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, hsl(var(--ultra) / 0.03), transparent 50%);
+  --window-radius: 10px;
 }
 
 .dark {
   color-scheme: dark;
 
-  /* ---- Surfaces (graphite levels from the native theme) ---- */
-  --background: 30 6% 6%;
-  --foreground: 40 14% 92%;
-  --card: 32 5% 13%;
-  --card-foreground: 40 14% 92%;
-  --popover: 32 5% 17%;
-  --popover-foreground: 40 14% 92%;
-  --secondary: 32 5% 10%;
-  --secondary-foreground: 40 12% 90%;
-  --muted: 32 4% 10%;
-  --muted-foreground: 38 6% 58%;
-  --accent-surface: 32 5% 9%;
-  --accent-surface-foreground: 40 12% 90%;
+  /* ---- Surfaces (warm charcoal) ---- */
+  --background: 28 9% 9%;
+  --foreground: 45 24% 93%;
+  --card: 28 7% 12.5%;
+  --card-foreground: 45 24% 93%;
+  --popover: 28 6% 18%;
+  --popover-foreground: 45 24% 93%;
+  --secondary: 30 7% 15%;
+  --secondary-foreground: 45 22% 90%;
+  --muted: 30 7% 15%;
+  --muted-foreground: 37 7% 63%;
+  --accent: 28 6% 18%;
+  --accent-foreground: 45 22% 90%;
+  --accent-surface: 28 6% 18%;
+  --accent-surface-foreground: 45 22% 90%;
 
-  /* Dark accent pairs with near-black text (white fails AA on this coral). */
-  --primary: 14 70% 58%;
-  --primary-foreground: 30 45% 10%;
-  --ring: 14 70% 58%;
+  --primary: 15 54% 51%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 15 54% 51%;
 
-  --destructive: 6 66% 60%;
+  --destructive: 11 51% 56%;
   --destructive-foreground: 0 0% 100%;
-  --success: 150 42% 52%;
-  --success-foreground: 30 6% 6%;
-  --warning: 38 78% 58%;
-  --source: 190 55% 56%;
+  --success: 140 33% 53%;
+  --success-foreground: 28 9% 9%;
+  --warning: 40 60% 58%;
+  --warning-foreground: 40 60% 58%;
+  --source: 187 58% 49%;
   --ultra: 258 92% 74%;
   --ultra-from: 252 100% 76%;
   --ultra-to: 271 93% 73%;
 
-  --border: 0 0% 100% / 0.09;
-  --input-border: 0 0% 100% / 0.12;
-  --hairline: 0 0% 100% / 0.07;
-  --hairline-strong: 0 0% 100% / 0.13;
+  --border: 30 6% 21%;
+  --input: 30 6% 24%;
+  --input-border: 30 6% 24%;
+  --hairline: 45 24% 93% / 0.08;
+  --hairline-strong: 45 24% 93% / 0.14;
   --hover-fill: 0 0% 100% / 0.05;
   --press-fill: 0 0% 100% / 0.08;
+  --sheen: 45 40% 96% / 0.06;
 
-  --sidebar: 30 6% 6%;
-  --sidebar-foreground: 38 6% 62%;
-  --sidebar-border: 0 0% 100% / 0.07;
-  --sidebar-accent: 32 5% 13%;
+  --sidebar: 28 10% 7.5%;
+  --sidebar-foreground: 37 7% 70%;
+  --sidebar-border: 28 7% 16%;
+  --sidebar-accent: 30 8% 14%;
 
-  --titlebar: 30 6% 6%;
+  --titlebar: 28 10% 7.5%;
   --caption-hover: 0 0% 100% / 0.06;
   --caption-press: 0 0% 100% / 0.10;
 
   --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
-  --shadow-float: 0 4px 16px -4px hsl(0 0% 0% / 0.45), 0 16px 40px -12px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(40 14% 92% / 0.06);
+  --shadow-float: 0 4px 16px -4px hsl(0 0% 0% / 0.45), 0 16px 40px -12px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(45 24% 93% / 0.06);
+  --shadow-glass: 0 8px 32px -10px hsl(0 0% 0% / 0.55), inset 0 1px 0 hsl(45 24% 93% / 0.07);
   --shadow-pop: 0 1px 2px hsl(0 0% 0% / 0.4), 0 3px 8px -2px hsl(0 0% 0% / 0.5), 0 10px 22px -10px hsl(0 0% 0% / 0.5);
+  --glow-primary: 0 1px 3px hsl(var(--primary) / 0.4), 0 6px 18px -6px hsl(var(--primary) / 0.5), 0 18px 36px -16px hsl(var(--primary) / 0.42);
   --well-inset: inset 0 1px 2px hsl(0 0% 0% / 0.38);
 
-  /* Dark chrome leans a touch more opaque so text stays legible over Mica. */
-  --titlebar-fill: hsl(var(--titlebar) / 0.58);
-  --sidebar-fill: hsl(var(--sidebar) / 0.58);
+  --titlebar-fill: hsl(var(--titlebar) / 0.78);
+  --sidebar-fill: hsl(var(--sidebar) / 0.92);
   --flyout-fill: hsl(var(--popover) / 0.72);
   --material-wash:
     radial-gradient(120% 90% at 8% 0%, hsl(var(--primary) / 0.08), transparent 55%),
@@ -184,8 +197,7 @@
 
 /*
  * Opaque fallback: user turned transparency off, or the OS asked for reduced
- * transparency. All chrome becomes solid and blurs are dropped — no material,
- * full legibility, lower GPU cost.
+ * transparency. All chrome becomes solid warm fill — never grey/white.
  */
 :root.no-transparency {
   --titlebar-fill: hsl(var(--titlebar));
@@ -207,29 +219,30 @@
   }
 }
 
-/* ---- Accent variants (synced with the account's accent setting) ---- */
-:root[data-accent="teal"] { --primary: 182 58% 33%; --ring: 182 58% 33%; }
-.dark[data-accent="teal"] { --primary: 186 62% 52%; --ring: 186 62% 52%; --primary-foreground: 40 6% 10%; }
-:root[data-accent="violet"] { --primary: 250 56% 60%; --ring: 250 56% 60%; }
-.dark[data-accent="violet"] { --primary: 252 76% 72%; --ring: 252 76% 72%; --primary-foreground: 40 6% 10%; }
-:root[data-accent="amber"] { --primary: 33 82% 50%; --ring: 33 82% 50%; --primary-foreground: 30 45% 10%; }
-.dark[data-accent="amber"] { --primary: 38 86% 60%; --ring: 38 86% 60%; --primary-foreground: 30 45% 10%; }
-:root[data-accent="sage"] { --primary: 130 26% 42%; --ring: 130 26% 42%; }
-.dark[data-accent="sage"] { --primary: 132 32% 58%; --ring: 132 32% 58%; --primary-foreground: 40 6% 10%; }
+/* ---- Accent variants (coral default; synced with the account accent) ---- */
+:root[data-accent="coral"]  { --primary: 15 54% 51%;  --ring: 15 54% 51%;  --primary-foreground: 0 0% 100%; }
+.dark[data-accent="coral"]  { --primary: 15 54% 51%;  --ring: 15 54% 51%;  --primary-foreground: 0 0% 100%; }
+:root[data-accent="teal"]   { --primary: 180 63% 33%; --ring: 180 63% 33%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="teal"]   { --primary: 187 58% 49%; --ring: 187 58% 49%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="violet"] { --primary: 249 59% 64%; --ring: 249 59% 64%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="violet"] { --primary: 249 66% 71%; --ring: 249 66% 71%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="amber"]  { --primary: 39 67% 55%;  --ring: 39 67% 55%;  --primary-foreground: 30 40% 12%; }
+.dark[data-accent="amber"]  { --primary: 38 73% 63%;  --ring: 38 73% 63%;  --primary-foreground: 30 40% 10%; }
+:root[data-accent="sage"]   { --primary: 120 18% 52%; --ring: 120 18% 52%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="sage"]   { --primary: 120 23% 61%; --ring: 120 23% 61%; --primary-foreground: 40 6% 10%; }
 
 /*
  * Windows high contrast (forced colors): hand control to the system palette.
- * Custom fills/shadows are dropped; system colors take over. Components keep
- * borders + focus outlines so structure survives.
  */
 @media (forced-colors: active) {
   :root,
   .dark {
     --shadow-soft: none;
     --shadow-float: none;
+    --shadow-glass: none;
     --shadow-pop: none;
+    --glow-primary: none;
     --well-inset: none;
-    /* System palette owns the surfaces; translucency would fight it. */
     --titlebar-fill: Canvas;
     --sidebar-fill: Canvas;
     --flyout-fill: Canvas;

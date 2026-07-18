@@ -117,6 +117,27 @@ export function effortLabel(effort: ReasoningEffort): string {
   }
 }
 
+/** Effort → effort-meter shape (bars 0–3 + violet "ultra" top tier). Drives the
+ *  brain-free reasoning mark shared by the composer pill, model rows, slider. */
+export function effortMeter(value: ReasoningEffort | null): { level: 0 | 1 | 2 | 3; ultra: boolean } {
+  switch (value) {
+    case null:
+      return { level: 0, ultra: false };
+    case "minimal":
+    case "low":
+      return { level: 1, ultra: false };
+    case "medium":
+      return { level: 2, ultra: false };
+    case "high":
+    case "xhigh":
+      return { level: 3, ultra: false };
+    case "max":
+      return { level: 3, ultra: true };
+    default:
+      return { level: 2, ultra: false };
+  }
+}
+
 /** Menu options for a model's reasoning control (parity: ModelSelectorThinking). */
 export function effortOptions(model: ModelEntry): EffortOption[] {
   if (!model.reasoning.supported) return [];

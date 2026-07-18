@@ -82,16 +82,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 20px;
   padding: 24px;
+}
+
+.chat-hero {
+  flex: 0 0 auto;
+  margin-bottom: 2px;
 }
 
 .chat-greeting {
   font-family: var(--font-serif);
-  font-size: var(--text-greeting);
+  font-size: clamp(2rem, 4vw, var(--text-greeting));
   font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
   color: hsl(var(--foreground));
   text-align: center;
+  text-wrap: balance;
   animation: chat-rise-in var(--dur-slow) var(--ease-out-expo);
 }
 

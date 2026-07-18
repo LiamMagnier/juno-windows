@@ -6,6 +6,7 @@ import { LoaderCircle, Settings } from "lucide-react";
 import { useAuthStore } from "@/state/authStore";
 import { useDataStore } from "@/state/dataStore";
 import { useUiStore } from "@/state/uiStore";
+import { DotIdenticon } from "@/components/signature/DotMatrix";
 
 export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   const profile = useAuthStore((s) => s.profile);
@@ -15,14 +16,12 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   const openSettings = useUiStore((s) => s.openSettings);
 
   const name = profile?.name ?? profile?.email ?? "Account";
-  const initial = (profile?.name ?? profile?.email ?? "?").slice(0, 1).toUpperCase();
+  const seed = profile?.email ?? profile?.name ?? "juno";
 
   const avatar = profile?.image ? (
     <img className="sidebar-avatar" src={profile.image} alt="" />
   ) : (
-    <span className="sidebar-avatar sidebar-avatar-initial" aria-hidden>
-      {initial}
-    </span>
+    <DotIdenticon seed={seed} size={28} className="sidebar-avatar" />
   );
 
   if (collapsed) {

@@ -15,7 +15,6 @@ import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   ArrowUp,
-  Brain,
   Check,
   FileText,
   Folder,
@@ -49,6 +48,7 @@ import {
   peekPendingProjectId,
   setPendingProjectId,
 } from "@/features/projects/projectContext";
+import { EffortMeter } from "@/components/signature/EffortMeter";
 import { ChatPopover } from "./ChatPopover";
 import { ModelSelector } from "./ModelSelector";
 import { ReasoningSlider } from "./ReasoningSlider";
@@ -58,6 +58,7 @@ import {
   buildPrivateHistory,
   defaultEffort,
   effortLabel,
+  effortMeter,
   effortOptions,
   formatBytes,
 } from "./helpers";
@@ -795,7 +796,7 @@ export function Composer({
                 disabled={busy}
                 onClick={() => setEffortOpen((v) => !v)}
               >
-                <Brain size={13} aria-hidden />
+                <EffortMeter {...effortMeter(selectedEffort)} title={`Thinking effort: ${effortDisplay}`} />
                 <span>{effortDisplay}</span>
               </button>
               <ChatPopover

@@ -1,9 +1,9 @@
 .titlebar {
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
-  height: 32px;
-  flex: 0 0 32px;
+  height: 40px;
+  flex: 0 0 40px;
+  gap: 2px;
   /* Translucent so the window material reads edge-to-edge across the top. */
   background: var(--titlebar-fill);
   -webkit-app-region: drag;
@@ -13,15 +13,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-inline-start: 14px;
+  padding-inline: 12px 8px;
   min-width: 0;
 }
 
 .titlebar-title {
-  font-size: var(--text-caption);
+  font-family: var(--font-serif);
+  font-size: 15px;
   font-weight: 600;
-  color: hsl(var(--sidebar-foreground));
-  letter-spacing: 0.01em;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+}
+
+/* Flexible draggable region between the menu bar and the caption buttons. */
+.titlebar-drag {
+  flex: 1;
+  align-self: stretch;
+  -webkit-app-region: drag;
 }
 
 .titlebar-captions {
@@ -31,7 +39,7 @@
 
 .caption-button {
   width: 46px;
-  height: 32px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -5,13 +5,13 @@
  */
 import { useMemo, useRef, useState } from "react";
 import {
-  Brain,
   ChevronDown,
   Eye,
   Globe,
   Star,
 } from "lucide-react";
 import type { ModelEntry } from "@/lib/data/entities";
+import { EffortMeter } from "@/components/signature/EffortMeter";
 import { ChatPopover } from "./ChatPopover";
 import { gateModel, groupModels } from "./helpers";
 
@@ -225,7 +225,7 @@ function ModelRow({
         <span className="chat-model-caps" aria-hidden>
           {vision ? <Eye size={12} /> : null}
           {model.capabilities.webSearch ? <Globe size={12} /> : null}
-          {model.reasoning.supported ? <Brain size={12} /> : null}
+          {model.reasoning.supported ? <EffortMeter level={2} tone="on" title="reasoning" /> : null}
         </span>
         {model.lifecycle === "legacy" ? <span className="chat-model-badge">Legacy</span> : null}
         {model.lifecycle === "deprecated" ? (

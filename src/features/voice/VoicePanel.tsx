@@ -4,71 +4,29 @@
  * captions (or a one-line state label), and the session controls
  * (mute / interrupt / captions / end), plus ended and error layouts.
  */
-import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
-import {
-  Captions,
-  CircleStop,
-  Mic,
-  MicOff,
-  PhoneOff,
-  Sparkles,
-  TriangleAlert,
-  Volume2,
-  X,
-} from "lucide-react";
+import { useRef, type KeyboardEvent } from "react";
+import { Captions, CircleStop, Mic, MicOff, PhoneOff, X } from "lucide-react";
 import { useThreadStore } from "@/state/threadStore";
 import { useVoiceStore, type VoicePhase } from "@/state/voiceStore";
+import { VoiceOrb, type OrbStatus } from "@/components/signature/VoiceOrb";
 import "./voice.css";
 
-type OrbState =
-  | "listening"
-  | "muted"
-  | "thinking"
-  | "speaking"
-  | "connecting"
-  | "error"
-  | "ended";
-
-function orbState(phase: VoicePhase, muted: boolean): OrbState {
+/** Voice phase → the website's VoiceOrb status. */
+function orbStatusFor(phase: VoicePhase, muted: boolean): OrbStatus {
   switch (phase) {
     case "connecting":
     case "reconnecting":
-      return "connecting";
-    case "speaking":
-      return "speaking";
     case "thinking":
       return "thinking";
+    case "speaking":
+      return "speaking";
     case "error":
       return "error";
     case "ended":
-      return "ended";
+      return "idle";
     default:
-      return muted ? "muted" : "listening";
+      return muted ? "idle" : "listening";
   }
-}
-
-const ORB_ICONS: Record<OrbState, typeof Mic> = {
-  listening: Mic,
-  muted: MicOff,
-  thinking: Sparkles,
-  speaking: Volume2,
-  connecting: Mic,
-  error: TriangleAlert,
-  ended: PhoneOff,
-};
-
-/** Live prefers-reduced-motion flag (reacts to OS setting changes). */
-function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduced(query.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
 }
 
 function stateLabel(phase: VoicePhase, muted: boolean): string {
@@ -103,24 +61,13 @@ export function VoicePanel() {
   const toggleCaptions = useVoiceStore((s) => s.toggleCaptions);
   const interrupt = useVoiceStore((s) => s.interrupt);
   const activeConversationId = useThreadStore((s) => s.activeConversationId);
-  const reducedMotion = useReducedMotion();
+  // The orb reads amplitude every frame off this ref (no extra re-renders).
+  const levelRef = useRef(0);
+  levelRef.current = amplitude;
 
   if (phase === "idle") return null;
 
-  const state = orbState(phase, muted);
-  const OrbIcon = ORB_ICONS[state];
   const live = phase !== "ended" && phase !== "error";
-  // The amplitude-driven pulse is JS-set inline style, so the global CSS
-  // reduced-motion collapse can't stop it — gate it here (state is still
-  // conveyed by icon + text label).
-  const animated = !reducedMotion && (state === "listening" || state === "speaking");
-  const scale = animated ? 1 + amplitude * 0.35 : 1;
-  const orbStyle: CSSProperties | undefined = reducedMotion
-    ? undefined
-    : ({
-        transform: `scale(${scale.toFixed(3)})`,
-        "--orb-glow": (0.25 + amplitude * 0.5).toFixed(3),
-      } as CSSProperties);
 
   const lastAssistantFinal = [...captions]
     .reverse()
@@ -144,9 +91,7 @@ export function VoicePanel() {
       onKeyDown={onKeyDown}
     >
       <div className="voice-orb-wrap" aria-hidden>
-        <div className="voice-orb" data-state={state} style={orbStyle}>
-          <OrbIcon size={16} aria-hidden />
-        </div>
+        <VoiceOrb status={orbStatusFor(phase, muted)} levelRef={levelRef} className="voice-orb-mark" />
       </div>
 
       {phase === "ended" ? (

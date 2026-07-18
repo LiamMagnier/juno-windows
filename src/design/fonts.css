@@ -1,0 +1,27 @@
+/*
+ * Bundled Juno typefaces. Newsreader is the whole UI (variable, optical sizing
+ * on); JetBrains Mono is metadata/code. Shipped as local woff2 (latin subset)
+ * so the app has no network font dependency — Vite fingerprints these URLs.
+ * Source: the same Google Fonts faces the website loads via next/font.
+ */
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("./fonts/Newsreader-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: italic;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("./fonts/Newsreader-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("./fonts/JetBrainsMono-latin.woff2") format("woff2");
+}

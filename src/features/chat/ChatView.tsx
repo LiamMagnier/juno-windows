@@ -8,6 +8,7 @@ import { useDataStore } from "@/state/dataStore";
 import { useThreadStore } from "@/state/threadStore";
 import { useAuthStore } from "@/state/authStore";
 import { sendMessage } from "@/lib/chat/chatEngine";
+import { AsciiHero } from "@/components/signature/AsciiHero";
 import { ArtifactsPanel } from "./ArtifactsPanel";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
@@ -159,6 +160,7 @@ export function ChatView() {
       <div className="chat-main">
         {showEmptyState ? (
           <div className="chat-empty">
+            <AsciiHero size={116} className="chat-hero" />
             <h1 className="chat-greeting">{greeting}</h1>
             <div className="chat-empty-composer">{composer}</div>
           </div>
