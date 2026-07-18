@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { SquarePen } from "lucide-react";
 import { DotMatrixMark } from "@/components/signature/DotMatrix";
-import { MenuBar } from "./MenuBar";
+import { startNewChat } from "@/features/sidebar/conversationActions";
+import { useUiStore } from "@/state/uiStore";
 import "./titlebar.css";
 
 /**
@@ -35,15 +37,30 @@ export function Titlebar() {
   const minimize = useCallback(() => void getCurrentWindow().minimize(), []);
   const toggleMaximize = useCallback(() => void getCurrentWindow().toggleMaximize(), []);
   const close = useCallback(() => void getCurrentWindow().close(), []);
+  const newChat = useCallback(() => {
+    useUiStore.getState().setMode("chat");
+    startNewChat();
+  }, []);
 
   return (
     <header className="titlebar" data-tauri-drag-region>
       <div className="titlebar-identity">
-        <DotMatrixMark size={20} />
+        <span className="titlebar-mark"><DotMatrixMark size={18} /></span>
         <span className="titlebar-title">Juno</span>
       </div>
-      <MenuBar />
       <div className="titlebar-drag" data-tauri-drag-region />
+      <div className="titlebar-actions">
+        <button
+          type="button"
+          className="titlebar-action"
+          aria-label="New chat"
+          title="New chat (Ctrl+N)"
+          onClick={newChat}
+        >
+          <SquarePen size={15} aria-hidden />
+          <span>New chat</span>
+        </button>
+      </div>
       <div className="titlebar-captions" role="group" aria-label="Window controls">
         <button type="button" className="caption-button" aria-label="Minimize" onClick={minimize}>
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">

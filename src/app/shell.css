@@ -3,6 +3,8 @@
   display: flex;
   min-height: 0;
   background: transparent;
+  padding: 0 8px 8px 0;
+  gap: 0;
 }
 
 .shell-sidebar {
@@ -11,7 +13,7 @@
   flex-direction: column;
   min-height: 0;
   /* Acrylic: translucent tint + blur over the window material. */
-  background: var(--sidebar-fill);
+  background: transparent;
   -webkit-backdrop-filter: blur(var(--acrylic-blur)) saturate(var(--acrylic-saturate));
   backdrop-filter: blur(var(--acrylic-blur)) saturate(var(--acrylic-saturate));
   color: hsl(var(--sidebar-foreground));
@@ -24,15 +26,16 @@
 }
 
 .shell-resizer {
-  flex: 0 0 4px;
-  margin-inline-start: -2px;
+  flex: 0 0 7px;
+  margin: 0 1px;
   cursor: ew-resize;
   z-index: 5;
+  border-radius: var(--radius-full);
 }
 
 .shell-resizer:hover,
 .shell-resizer:focus-visible {
-  background: hsl(var(--primary) / 0.35);
+  background: hsl(var(--foreground) / 0.1);
   outline: none;
 }
 
@@ -45,10 +48,8 @@
   /* The content pane is the one solid card in the Win11 layering — it always
      stays opaque so reading long chat threads never fights the backdrop. */
   background: hsl(var(--card));
-  border-top-left-radius: var(--radius-card);
-  border: 1px solid hsl(var(--sidebar-border));
-  border-bottom: none;
-  border-right: none;
-  box-shadow: -1px -1px 0 0 hsl(var(--card) / 0.6);
+  border-radius: var(--radius-panel);
+  border: 1px solid hsl(var(--hairline-strong));
+  box-shadow: var(--shadow-soft), inset 0 1px 0 hsl(var(--sheen));
   overflow: hidden;
 }

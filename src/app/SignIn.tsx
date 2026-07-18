@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { ArrowRight, Check } from "lucide-react";
 import { useAuthStore } from "@/state/authStore";
+import { DotMatrixMark } from "@/components/signature/DotMatrix";
 import {
   backendEnvironment,
   setBackendEnvironment,
@@ -24,8 +26,9 @@ export function SignIn() {
   return (
     <main className="signin" aria-busy={authorizing}>
       <div className="signin-card">
+        <div className="signin-mark" aria-hidden><DotMatrixMark size={34} /></div>
         <h1 className="signin-greeting">Juno</h1>
-        <p className="signin-subtitle">Your assistant, on this PC.</p>
+        <p className="signin-subtitle">One calm place to think, create, and get work done.</p>
 
         {authorizing ? (
           <div className="signin-waiting" role="status">
@@ -39,11 +42,17 @@ export function SignIn() {
         ) : (
           <>
             <button type="button" className="signin-primary" onClick={() => void signIn()}>
-              Sign in with your browser
+              Continue in browser
+              <ArrowRight size={16} aria-hidden />
             </button>
+            <div className="signin-benefits" aria-label="Your data stays in sync">
+              <span><Check size={13} aria-hidden /> Conversations</span>
+              <span><Check size={13} aria-hidden /> Projects</span>
+              <span><Check size={13} aria-hidden /> Memory</span>
+            </div>
             <p className="signin-hint">
-              Uses your existing Juno account — conversations, projects and memory stay in sync
-              with the web and Mac apps.
+              Sign in securely with your existing Juno account. Your workspace stays in sync
+              across Windows, web, and Mac.
             </p>
           </>
         )}

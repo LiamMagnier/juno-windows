@@ -128,7 +128,8 @@ export function Sidebar({ mode, collapsed }: { mode: AppMode; collapsed: boolean
           className="sidebar-mode"
           onClick={() => setMode("chat")}
         >
-          {collapsed ? <MessageSquare size={16} aria-hidden /> : "Chat"}
+          <MessageSquare size={15} aria-hidden />
+          {!collapsed ? <span>Chat</span> : null}
         </button>
         <button
           ref={codeTabRef}
@@ -141,7 +142,8 @@ export function Sidebar({ mode, collapsed }: { mode: AppMode; collapsed: boolean
           className="sidebar-mode"
           onClick={() => setMode("code")}
         >
-          {collapsed ? <CodeXml size={16} aria-hidden /> : "Code"}
+          <CodeXml size={15} aria-hidden />
+          {!collapsed ? <span>Code</span> : null}
         </button>
       </div>
 
@@ -232,16 +234,19 @@ function ChatSidebarContent({ onOpenSearch }: { onOpenSearch(): void }) {
   return (
     <>
       <div className="sidebar-scroll">
-        <button type="button" className="sidebar-row sidebar-newchat" onClick={startNewChat}>
-          <Plus size={16} aria-hidden />
-          New chat
-        </button>
-        <button type="button" className="sidebar-row" onClick={onOpenSearch}>
-          <Search size={16} aria-hidden />
-          Search chats
-          <kbd className="sidebar-kbd">Ctrl+K</kbd>
-        </button>
+        <div className="sidebar-top-actions">
+          <button type="button" className="sidebar-row sidebar-newchat" onClick={startNewChat}>
+            <span className="sidebar-action-icon"><Plus size={15} aria-hidden /></span>
+            New chat
+          </button>
+          <button type="button" className="sidebar-row sidebar-search" onClick={onOpenSearch}>
+            <Search size={15} aria-hidden />
+            Search
+            <kbd className="sidebar-kbd">Ctrl K</kbd>
+          </button>
+        </div>
 
+        <div className="sidebar-section-label">Workspace</div>
         <nav className="sidebar-nav" aria-label="Sections">
           {NAV_ROWS.map((row) => (
             <button
