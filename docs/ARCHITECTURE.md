@@ -78,7 +78,7 @@ The realtime relay (juno `relay/`, protocol in contract map [6] / BACKEND_API.md
 
 ## Design system
 
-Adapted from the shared Juno language (graphite dark / warm paper light, one terracotta accent, quiet motion) to Windows idioms: Segoe UI Variable working type (serif reserved for greetings), a 4px grid, restrained radii, Fluent-style hover/pressed fills, custom titlebar with Fluent caption buttons (red close hover), CSS-acrylic popovers, `forced-colors` (high contrast) and `prefers-reduced-motion` support, thin overlay scrollbars, visible keyboard focus everywhere, F6 region cycling, and Ctrl-based shortcuts (Ctrl+1/2 modes, Ctrl+N new chat, Ctrl+K search, Ctrl+B sidebar, Ctrl+, settings). Tokens live in `src/design/tokens.css`; concrete values come from the web `globals.css` and the Mac app's `Theme.swift` (graphite levels, accent set).
+Shares the website identity end-to-end: warm paper / warm charcoal, coral accent, **Newsreader as the whole UI** (JetBrains Mono for metadata/code), website motion tokens (spring / out-soft / out-expo), concentric radii, soft elevation + film grain, and the same micro-interaction language (menu icon gestures, composer control motions, pressable scale). Windows-only chrome sits on top: custom titlebar with Fluent caption buttons (red close hover), CSS-acrylic sidebar/titlebar/flyouts, `forced-colors` and `prefers-reduced-motion` / reduced-transparency support, thin overlay scrollbars, visible keyboard focus, F6 region cycling, and Ctrl-based shortcuts (Ctrl+1/2 modes, Ctrl+N new chat, Ctrl+K search, Ctrl+B sidebar, Ctrl+, settings). Tokens live in `src/design/tokens.css`; utilities in `src/design/base.css` and `src/design/motion.css`; values track web `globals.css`.
 
 ## Security posture
 

@@ -1,0 +1,275 @@
+/*
+ * Micro-interaction language shared across menus, composer controls, and rows.
+ * Ported from the website globals so Windows feels like the same product.
+ */
+
+/* ---- Menu / list row icon motion ---- */
+
+.chat-menu-item > svg,
+.context-menu-item > svg,
+.context-menu-icon svg,
+[role="menuitem"] > svg {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    transform 340ms var(--ease-spring),
+    opacity var(--dur-fast) var(--ease-out-soft);
+}
+
+@media (hover: hover) {
+  .chat-menu-item:is(:hover, :focus-visible) > svg,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) > svg,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .context-menu-icon svg,
+  [role="menuitem"]:is(:hover, :focus-visible) > svg {
+    transform: translateY(-0.55px) scale(1.06);
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-plus,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-plus {
+    transform: rotate(90deg) scale(1.06);
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-pencil,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-square-pen,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-pen-line,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-pencil {
+    animation: menu-icon-write 460ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-trash-2,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-trash,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-trash-2 {
+    animation: menu-icon-trash 440ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-check,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-check {
+    animation: menu-icon-check 380ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-copy,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-copy {
+    animation: menu-icon-copy 420ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-pin,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-pin {
+    animation: menu-icon-pin 420ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-settings,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-sliders-horizontal,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-settings {
+    animation: menu-icon-spin-quarter 480ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-refresh-cw,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-rotate-ccw,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-refresh-cw {
+    animation: menu-icon-spin 520ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-folder,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-library,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-box,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-folder {
+    animation: menu-icon-bob 400ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-paperclip,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-image-plus,
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-file-text {
+    animation: menu-icon-attach 420ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-globe {
+    animation: menu-icon-spin-quarter 520ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-sparkles {
+    animation: menu-icon-pop 460ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-search,
+  .context-menu-item:is(:hover, :focus-visible, [data-focused]) .lucide-search {
+    animation: menu-icon-search 420ms var(--ease-spring) both;
+  }
+
+  .chat-menu-item:is(:hover, :focus-visible) .lucide-log-out {
+    animation: menu-icon-logout 400ms var(--ease-spring) both;
+  }
+}
+
+@keyframes menu-icon-pin {
+  0% { transform: translateY(0) rotate(0); }
+  45% { transform: translateY(1.5px) rotate(-8deg) scale(0.96); }
+  100% { transform: translateY(-0.5px) rotate(0) scale(1.05); }
+}
+@keyframes menu-icon-write {
+  0% { transform: translate(0, 0) rotate(0); }
+  35% { transform: translate(1px, 1px) rotate(-8deg); }
+  70% { transform: translate(-0.5px, 0.5px) rotate(4deg); }
+  100% { transform: translate(0, -0.5px) rotate(0) scale(1.04); }
+}
+@keyframes menu-icon-trash {
+  0% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-1.25px) rotate(-6deg); }
+  100% { transform: translateY(0) rotate(0) scale(1.04); }
+}
+@keyframes menu-icon-check {
+  0% { transform: scale(0.86); opacity: 0.7; }
+  55% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1.04); }
+}
+@keyframes menu-icon-copy {
+  0% { transform: translate(0, 0); }
+  45% { transform: translate(1.25px, -1.25px) scale(1.05); }
+  100% { transform: translate(0.35px, -0.35px) scale(1.03); }
+}
+@keyframes menu-icon-spin-quarter {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(45deg) scale(1.04); }
+}
+@keyframes menu-icon-spin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(180deg); }
+}
+@keyframes menu-icon-logout {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(0.75px) scale(1.03); }
+}
+@keyframes menu-icon-bob {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-1.5px) scale(1.06); }
+  100% { transform: translateY(-0.4px) scale(1.03); }
+}
+@keyframes menu-icon-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.88); }
+  70% { transform: scale(1.14); }
+  100% { transform: scale(1.05); }
+}
+@keyframes menu-icon-attach {
+  0% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-1.5px) rotate(-10deg); }
+  100% { transform: translateY(-0.4px) rotate(0) scale(1.04); }
+}
+@keyframes menu-icon-search {
+  0% { transform: translate(0, 0) rotate(0); }
+  50% { transform: translate(0.8px, -0.8px) rotate(-8deg) scale(1.06); }
+  100% { transform: translate(0.3px, -0.3px) rotate(0) scale(1.03); }
+}
+
+/* ---- Composer control gestures ---- */
+
+.chat-add-btn svg {
+  transform-origin: center;
+  transition: transform 420ms var(--ease-spring);
+}
+.chat-add-btn:hover:not(:disabled) svg {
+  animation: composer-add-plus 420ms var(--ease-spring) both;
+}
+@keyframes composer-add-plus {
+  0% { transform: rotate(0) scale(1); }
+  58% { transform: rotate(102deg) scale(0.88); }
+  100% { transform: rotate(90deg) scale(1); }
+}
+
+.chat-mic-btn {
+  position: relative;
+}
+.chat-mic-btn::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid hsl(var(--foreground) / 0.14);
+  border-radius: 999px;
+  opacity: 0;
+  transform: scale(0.65);
+  pointer-events: none;
+}
+.chat-mic-btn:hover:not(:disabled) svg {
+  animation: composer-mic-listen 520ms var(--ease-spring) both;
+}
+.chat-mic-btn:hover:not(:disabled)::before {
+  animation: composer-mic-ring 600ms var(--ease-out-soft) both;
+}
+@keyframes composer-mic-listen {
+  0% { transform: scaleY(1); }
+  45% { transform: scaleY(0.84); }
+  72% { transform: scaleY(1.1); }
+  100% { transform: scaleY(1); }
+}
+@keyframes composer-mic-ring {
+  0% { transform: scale(0.65); opacity: 0; }
+  42% { opacity: 0.45; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+.chat-send-btn .chat-send-icon {
+  transform-origin: center;
+}
+.chat-send-btn:hover:not(:disabled) .chat-send-icon {
+  animation: composer-send 520ms var(--ease-spring) both;
+}
+.chat-send-btn:hover:not(:disabled) .chat-stop-icon {
+  animation: composer-stop 420ms var(--ease-spring) both;
+}
+@keyframes composer-send {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  38% { transform: translateY(-3px) scale(0.9); opacity: 0.35; }
+  39% { transform: translateY(2.5px) scale(0.9); opacity: 0.35; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes composer-stop {
+  0% { transform: rotate(0) scale(1); }
+  58% { transform: rotate(50deg) scale(0.76); }
+  100% { transform: rotate(45deg) scale(0.82); }
+}
+
+/* ---- Sidebar row hover ---- */
+
+.sidebar-row svg,
+.sidebar-convo svg,
+.sidebar-folder svg,
+.sidebar-nav .sidebar-row svg {
+  transition: transform 320ms var(--ease-spring), color var(--dur-fast) var(--ease-out-soft);
+}
+.sidebar-row:hover svg,
+.sidebar-convo:hover .sidebar-convo-pin,
+.sidebar-folder:hover svg {
+  transform: translateY(-0.5px) scale(1.05);
+}
+
+/* ---- Juno mark press ---- */
+
+@keyframes juno-mark-pop {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(0.82) rotate(-10deg); }
+  62% { transform: scale(1.12) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.juno-mark-popping {
+  animation: juno-mark-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-menu-item > svg,
+  .context-menu-item > svg,
+  .context-menu-icon svg,
+  [role="menuitem"] > svg,
+  .chat-add-btn svg,
+  .chat-mic-btn svg,
+  .chat-send-btn .chat-send-icon,
+  .chat-send-btn .chat-stop-icon,
+  .sidebar-row svg,
+  .sidebar-convo svg,
+  .sidebar-folder svg {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  .chat-mic-btn::before { display: none; }
+  .juno-mark-popping { animation: none; }
+}

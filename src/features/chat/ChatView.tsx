@@ -193,7 +193,7 @@ export function ChatView() {
             <p className="chat-empty-subtitle">
               {privateMode
                 ? "This conversation stays on this device and won’t appear in history."
-                : "Ask a question, explore an idea, or bring in a file to get started."}
+                : "Ask a question, explore an idea, or drop in a file — Juno is ready when you are."}
             </p>
             <div className="chat-empty-composer">{composer}</div>
           </div>

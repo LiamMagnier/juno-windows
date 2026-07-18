@@ -4,6 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./design/tokens.css";
 import "./design/fonts.css";
 import "./design/base.css";
+import "./design/motion.css";
 
 // Each Tauri window loads the same tiny entry, then imports only its surface.
 // The Quick webview therefore does not parse or execute the full desktop shell.

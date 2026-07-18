@@ -1,37 +1,33 @@
 .context-menu {
   position: fixed;
   z-index: 1000;
-  min-width: 180px;
-  padding: 5px;
+  min-width: 196px;
+  padding: 6px;
   background: var(--flyout-fill);
-  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
-  backdrop-filter: blur(var(--flyout-blur)) saturate(1.7);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.65);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.65);
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--hairline-strong));
-  border-radius: 11px;
-  box-shadow: var(--shadow-float);
+  border-radius: var(--radius-menu);
+  box-shadow: var(--shadow-glass);
   outline: none;
   transform-origin: var(--menu-origin, top left);
-  animation: context-menu-in var(--dur-fast) var(--ease-out-expo);
-}
-
-@keyframes context-menu-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
+  animation: pop-in var(--dur-base) var(--ease-out-expo);
 }
 
 .context-menu-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  min-height: 32px;
-  padding: 7px 10px;
-  border-radius: 7px;
-  font-size: 13px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  font-size: 0.875rem;
   text-align: left;
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
 }
 
 .context-menu-item[data-focused]:not(:disabled) {
@@ -44,6 +40,15 @@
 
 .context-menu-item[data-destructive] {
   color: hsl(var(--destructive));
+}
+
+.context-menu-item[data-destructive][data-focused]:not(:disabled) {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.context-menu-item[data-destructive][data-focused]:not(:disabled) .context-menu-icon {
+  color: hsl(var(--destructive-foreground));
 }
 
 .context-menu-item:disabled {
@@ -62,7 +67,7 @@
 
 .context-menu-separator {
   height: 1px;
-  margin: 4px 8px;
+  margin: 5px 8px;
   background: hsl(var(--hairline));
 }
 
@@ -71,10 +76,14 @@
     border: 1px solid CanvasText;
   }
 
-  /* The roving highlight is a background fill that forced colors strips —
-     outline the focused item so arrow-key navigation stays visible. */
   .context-menu-item[data-focused] {
     outline: 1px solid Highlight;
     outline-offset: -1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .context-menu {
+    animation: none;
   }
 }

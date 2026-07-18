@@ -3,6 +3,7 @@
 *::after {
   box-sizing: border-box;
   border-color: hsl(var(--border));
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -17,39 +18,45 @@ body {
      so a missing native backdrop never leaves the window see-through. */
   background: transparent;
   color: hsl(var(--foreground));
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: var(--text-body);
-  line-height: 1.45;
+  line-height: 1.55;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "ss01" 1;
+  font-feature-settings: "kern" 1, "liga" 1;
   overflow: hidden;
   user-select: none;
   cursor: default;
 }
 
-/* App-wide film grain (~2%): the subliminal "paper" cue. Quiet, fixed,
-   non-interactive. Dropped under forced-colors. */
+/* One optical weight for interface glyphs (Lucide). */
+svg.lucide {
+  stroke-width: 1.75;
+  shape-rendering: geometricPrecision;
+}
+
+/* App-wide film grain — subliminal paper cue (website parity ~2.2%). */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  opacity: 0.012;
+  opacity: 0.022;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 @media (forced-colors: active) {
   body::after { display: none; }
 }
 
-/* Mono metadata eyebrow — the Juno metadata voice (THINKING, TOKENS, SOURCE…). */
+/* Mono metadata eyebrow — THINKING, TOKENS, SOURCE… */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
+  letter-spacing: 0.14em;
+  font-weight: 500;
   color: hsl(var(--muted-foreground));
 }
 
@@ -92,13 +99,13 @@ a {
   color: hsl(var(--primary));
 }
 
-/* ---- Focus: Windows-style visible ring, keyboard only ---- */
+/* ---- Focus: keyboard only ---- */
 :focus {
   outline: none;
 }
 
 :focus-visible {
-  outline: 2px solid hsl(var(--ring) / 0.86);
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: var(--radius-control);
 }
@@ -109,23 +116,28 @@ a {
   }
 }
 
-/* ---- Scrollbars: thin, quiet, Windows-overlay feel ---- */
+/* ---- Scrollbars: thin, quiet ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--foreground) / 0.15);
+  background: hsl(var(--border));
   border-radius: 999px;
   border: 3px solid transparent;
-  background-clip: padding-box;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--foreground) / 0.32);
-  background-clip: padding-box;
-  border: 2px solid transparent;
+  background: hsl(var(--muted-foreground) / 0.5);
+  background-clip: content-box;
+  border: 3px solid transparent;
 }
 
 ::-webkit-scrollbar-track,
@@ -133,7 +145,7 @@ a {
   background: transparent;
 }
 
-/* ---- Reduced motion: collapse all animation to instants ---- */
+/* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -156,4 +168,155 @@ a {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ==========================================================================
+   Depth kit & interaction primitives (website parity)
+   ========================================================================== */
+
+/* Tactile press for chips / icon buttons / compact controls. */
+.pressable {
+  transition-property: transform, color, background-color, border-color, opacity, box-shadow;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out-soft);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Destructive hover language. */
+.danger-hover.danger-hover:hover {
+  border-color: hsl(var(--destructive));
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+.danger-hover svg {
+  transition: transform 180ms var(--ease-out-soft);
+}
+.danger-hover:hover svg {
+  transform: scale(1.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .danger-hover svg { transition: none; }
+  .danger-hover:hover svg { transform: none; }
+}
+
+/* Raised panels — top sheen + soft lift. */
+.surface-raised {
+  background-image:
+    linear-gradient(180deg, hsl(var(--sheen)), transparent 44%),
+    linear-gradient(0deg, hsl(var(--card)), hsl(var(--card)));
+  box-shadow: inset 0 1px 0 hsl(var(--sheen)), var(--shadow-soft);
+}
+
+/* Floating glass chrome (menus, popovers, palette). */
+.glass-raised {
+  background: var(--flyout-fill);
+  -webkit-backdrop-filter: blur(var(--flyout-blur)) saturate(1.6);
+  backdrop-filter: blur(var(--flyout-blur)) saturate(1.6);
+  box-shadow: inset 0 1px 0 hsl(var(--sheen)), var(--shadow-glass);
+  border: 1px solid hsl(var(--hairline-strong));
+}
+
+/* Primary glossy fill + rim. */
+.btn-glossy {
+  background-image: linear-gradient(180deg, hsl(0 0% 100% / 0.17), hsl(0 0% 100% / 0) 52%);
+}
+.halo-primary {
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.22);
+}
+
+/* Recessed field well. */
+.field-well {
+  box-shadow: var(--well-inset);
+}
+
+/* Skeleton shimmer. */
+.skeleton {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.06) 45%,
+      transparent 90%
+    ),
+    hsl(var(--muted));
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s var(--ease-out-soft) infinite;
+  border-radius: var(--radius-control);
+}
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+/* Entrance rise used across messages, chips, empty-state. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rise-in {
+  animation: rise-in var(--dur-slow) var(--ease-spring) both;
+}
+
+/* Scroll fade for long prose regions. */
+.scroll-fade-y {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 18px,
+    #000 calc(100% - 18px),
+    transparent
+  );
+}
+
+/* Diagonal sheen on hover for primary CTAs / cards. */
+.sheen-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.sheen-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    hsl(0 0% 100% / 0.18) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.sheen-sweep:hover::after {
+  animation: sheen-sweep-run 620ms var(--ease-out-expo) both;
+}
+@keyframes sheen-sweep-run {
+  to { transform: translateX(120%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheen-sweep::after { display: none; }
 }

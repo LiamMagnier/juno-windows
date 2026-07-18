@@ -3,19 +3,19 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  /* The app's own material. Opaque background guarantees the window is never
-     see-through; the wash is a subtle Mica-like tint the translucent chrome
-     blurs. When a real OS backdrop (Mica) is installed we drop the opaque
-     layer so the genuine material shows through instead. */
+  /* Warm paper/charcoal material. Opaque so the window is never see-through;
+     the wash is a quiet Mica-like tint the translucent chrome blurs. */
   background: hsl(var(--background));
   background-image: var(--material-wash);
   border-radius: var(--window-radius);
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px hsl(var(--hairline));
 }
 
 :root.has-native-material .app-frame {
   background: transparent;
   background-image: none;
+  box-shadow: none;
 }
 
 /* Maximized / snapped: the OS square-crops the window, so match it. */

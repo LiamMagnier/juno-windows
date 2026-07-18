@@ -1,8 +1,8 @@
 .titlebar {
   display: flex;
   align-items: stretch;
-  height: 44px;
-  flex: 0 0 44px;
+  height: 46px;
+  flex: 0 0 46px;
   gap: 0;
   background: var(--titlebar-fill);
   border-bottom: 1px solid hsl(var(--hairline));
@@ -14,27 +14,29 @@
 .titlebar-identity {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   width: 224px;
   padding-inline: 14px 10px;
   min-width: 0;
 }
 
 .titlebar-mark {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: hsl(var(--primary));
-  border-radius: 7px;
-  background: hsl(var(--primary) / 0.1);
+  border-radius: 8px;
+  background: linear-gradient(145deg, hsl(var(--primary) / 0.14), hsl(var(--primary) / 0.05));
+  border: 1px solid hsl(var(--primary) / 0.14);
+  box-shadow: inset 0 1px 0 hsl(var(--sheen));
 }
 
 .titlebar-title {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 650;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-weight: 600;
   color: hsl(var(--foreground));
   letter-spacing: -0.015em;
 }
@@ -58,17 +60,25 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 0 10px;
+  padding: 0 11px;
   color: hsl(var(--muted-foreground));
   border-radius: var(--radius-control);
-  font-size: 12px;
-  font-weight: 550;
-  transition: background var(--dur-fast), color var(--dur-fast);
+  font-size: var(--text-label);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .titlebar-action:hover {
   color: hsl(var(--foreground));
   background: hsl(var(--hover-fill));
+}
+
+.titlebar-action:active {
+  transform: scale(0.97);
 }
 
 .titlebar-captions {
@@ -78,12 +88,14 @@
 
 .caption-button {
   width: 46px;
-  height: 44px;
+  height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: hsl(var(--foreground) / 0.78);
-  transition: background var(--dur-fast) var(--ease-out-soft);
+  transition:
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
 }
 
 .caption-button:hover {

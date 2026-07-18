@@ -1,169 +1,211 @@
 /*
- * Juno Desktop 2026
+ * Juno Desktop — design tokens
  *
- * A quiet, content-first system for Windows. The palette is intentionally
- * neutral and the coral brand colour is reserved for state and intent. The
- * UI uses Segoe UI Variable so controls feel native at every Windows scale;
- * Newsreader remains available for the occasional editorial moment.
+ * Same identity as the website: warm paper / warm charcoal, coral accent,
+ * Newsreader + JetBrains Mono, soft elevation, springy motion.
+ * Windows-only chrome (acrylic titlebar, flyouts, caption buttons) sits on top.
  */
 
 :root {
   color-scheme: light;
 
-  --background: 40 17% 96%;
-  --foreground: 24 7% 12%;
+  /* ---- Color (parity with juno/src/app/globals.css) ---- */
+  --background: 48 33% 97%;
+  --foreground: 30 3% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 24 7% 12%;
+  --card-foreground: 30 3% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 24 7% 12%;
-  --secondary: 36 14% 94%;
-  --secondary-foreground: 24 7% 18%;
-  --muted: 36 12% 93%;
-  --muted-foreground: 28 6% 43%;
-  --accent: 30 14% 91%;
-  --accent-foreground: 24 7% 16%;
-  --accent-surface: 30 14% 91%;
-  --accent-surface-foreground: 24 7% 16%;
+  --popover-foreground: 30 3% 12%;
+  --secondary: 50 23% 95%;
+  --secondary-foreground: 30 3% 18%;
+  --muted: 50 23% 95%;
+  --muted-foreground: 40 4% 40%;
+  --accent: 48 28% 92%;
+  --accent-foreground: 30 3% 18%;
+  --accent-surface: 48 28% 92%;
+  --accent-surface-foreground: 30 3% 18%;
 
-  --primary: 14 62% 49%;
+  --primary: 15 54% 51%;
   --primary-foreground: 0 0% 100%;
-  --ring: 14 62% 49%;
-  --destructive: 4 67% 48%;
+  --ring: 15 54% 51%;
+  --destructive: 11 51% 50%;
   --destructive-foreground: 0 0% 100%;
-  --success: 145 45% 37%;
+  --destructive-ink: 11 55% 41%;
+  --success: 140 33% 46%;
   --success-foreground: 0 0% 100%;
-  --warning: 35 76% 43%;
-  --warning-foreground: 30 80% 23%;
-  --source: 191 62% 35%;
-  --ultra: 256 65% 60%;
-  --ultra-from: 252 78% 61%;
-  --ultra-to: 272 65% 58%;
+  --success-ink: 140 38% 33%;
+  --warning: 40 57% 51%;
+  --warning-foreground: 40 57% 33%;
+  --source: 187 62% 34%;
+  --ultra: 258 90% 66%;
+  --ultra-from: 252 100% 68%;
+  --ultra-to: 271 91% 65%;
 
-  --border: 30 10% 86%;
-  --input: 30 9% 80%;
-  --input-border: 30 9% 80%;
-  --hairline: 24 10% 14% / 0.075;
-  --hairline-strong: 24 10% 14% / 0.13;
-  --hover-fill: 24 10% 14% / 0.052;
-  --press-fill: 24 10% 14% / 0.09;
-  --sheen: 0 0% 100% / 0.72;
+  --border: 43 23% 88%;
+  --input: 43 23% 85%;
+  --input-border: 43 23% 85%;
+  --hairline: 30 12% 18% / 0.06;
+  --hairline-strong: 30 12% 18% / 0.11;
+  --hover-fill: 30 12% 18% / 0.045;
+  --press-fill: 30 12% 18% / 0.08;
+  --sheen: 0 0% 100% / 0.55;
 
-  --sidebar: 38 15% 94%;
-  --sidebar-foreground: 26 7% 29%;
-  --sidebar-border: 30 10% 86%;
-  --sidebar-accent: 28 13% 88%;
-  --titlebar: 38 15% 94%;
-  --caption-hover: 24 10% 14% / 0.06;
-  --caption-press: 24 10% 14% / 0.1;
+  --sidebar: 50 23% 95%;
+  --sidebar-foreground: 40 4% 30%;
+  --sidebar-border: 43 23% 88%;
+  --sidebar-accent: 48 28% 91%;
+  --titlebar: 50 23% 95%;
+  --caption-hover: 30 12% 18% / 0.06;
+  --caption-press: 30 12% 18% / 0.1;
 
+  /* ---- Type ---- */
   --dot-size: 5px;
   --dot-gap: 3px;
-  --font-sans: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  --font-serif: "Newsreader", Georgia, serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", "Cascadia Mono", Consolas, monospace;
-  --text-caption: 12px;
-  --text-body: 14px;
-  --text-body-lg: 16px;
-  --text-subtitle: 19px;
-  --text-title: 24px;
-  --text-greeting: 32px;
+  /* Serif is the whole UI (website parity). System sans is fallback only. */
+  --font-serif: "Newsreader", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-serif);
+  --font-display: var(--font-serif);
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Cascadia Mono", ui-monospace, Consolas, monospace;
 
-  --radius-control: 8px;
-  --radius-card: 12px;
-  --radius-float: 14px;
-  --radius-panel: 18px;
-  --radius-popover: 12px;
-  --radius-menu: 10px;
+  --text-caption: 0.6875rem;   /* 11px */
+  --text-label: 0.75rem;       /* 12px */
+  --text-body: 0.9375rem;      /* 15px */
+  --text-body-lg: 1.0625rem;   /* 17px */
+  --text-heading: 1.125rem;    /* 18px */
+  --text-title: 1.375rem;      /* 22px */
+  --text-subtitle: 1.1875rem;  /* 19px */
+  --text-greeting: clamp(2rem, 4vw, 2.75rem);
+
+  /* ---- Radius (website concentric scale, slightly desktop-tuned) ---- */
+  --radius-sm: 4px;
+  --radius-control: 10px;
+  --radius-md: 8px;
+  --radius-card: 16px;
+  --radius-float: 18px;
+  --radius-panel: 24px;
+  --radius-popover: 18px;
+  --radius-menu: 14px;
   --radius-full: 999px;
-  --radius: 14px;
-  --window-radius: 9px;
+  --radius: 24px;
+  --window-radius: 10px;
 
-  --shadow-soft: 0 1px 2px hsl(25 12% 10% / 0.055), 0 1px 5px hsl(25 12% 10% / 0.035);
-  --shadow-float: 0 1px 2px hsl(25 12% 10% / 0.07), 0 10px 34px hsl(25 12% 10% / 0.13), inset 0 1px 0 hsl(0 0% 100% / 0.7);
-  --shadow-glass: 0 14px 40px hsl(25 12% 10% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.7);
-  --shadow-pop: 0 1px 2px hsl(25 12% 10% / 0.07), 0 6px 20px hsl(25 12% 10% / 0.1);
-  --glow-primary: 0 1px 2px hsl(var(--primary) / 0.28), 0 6px 18px hsl(var(--primary) / 0.18);
-  --well-inset: inset 0 1px 2px hsl(24 10% 14% / 0.055);
+  /* ---- Elevation ---- */
+  --shadow-soft: 0 1px 2px hsl(30 10% 20% / 0.05), 0 4px 12px -4px hsl(30 10% 20% / 0.08);
+  --shadow-float:
+    0 4px 14px -4px hsl(30 10% 16% / 0.12),
+    0 14px 36px -10px hsl(30 10% 16% / 0.14),
+    inset 0 1px 0 hsl(0 0% 100% / 0.65);
+  --shadow-glass:
+    0 8px 32px -10px hsl(30 12% 12% / 0.18),
+    inset 0 1px 0 hsl(0 0% 100% / 0.55);
+  --shadow-pop:
+    0 1px 1px hsl(30 12% 18% / 0.05),
+    0 2px 4px -1px hsl(30 12% 18% / 0.09),
+    0 8px 18px -8px hsl(30 12% 18% / 0.12);
+  --glow-primary:
+    0 1px 2px hsl(var(--primary) / 0.32),
+    0 5px 14px -5px hsl(var(--primary) / 0.42),
+    0 14px 30px -14px hsl(var(--primary) / 0.34);
+  --well-inset: inset 0 1px 2px hsl(30 12% 18% / 0.07);
 
-  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* ---- Motion ---- */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast: 110ms;
-  --dur-base: 180ms;
-  --dur-slow: 300ms;
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+  --dur-flash: 4000ms;
 
-  --acrylic-blur: 28px;
-  --acrylic-saturate: 1.2;
-  --titlebar-fill: hsl(var(--titlebar) / 0.88);
-  --sidebar-fill: hsl(var(--sidebar) / 0.9);
-  --flyout-fill: hsl(var(--popover) / 0.91);
-  --flyout-blur: 30px;
+  /* ---- Windows chrome materials ---- */
+  --acrylic-blur: 32px;
+  --acrylic-saturate: 1.35;
+  --titlebar-fill: hsl(var(--titlebar) / 0.86);
+  --sidebar-fill: hsl(var(--sidebar) / 0.88);
+  --flyout-fill: hsl(var(--popover) / 0.92);
+  --flyout-blur: 36px;
   --material-wash:
-    radial-gradient(1000px 680px at -10% -20%, hsl(var(--primary) / 0.055), transparent 54%),
-    linear-gradient(135deg, hsl(38 18% 96%), hsl(32 12% 94%));
+    radial-gradient(1100px 720px at -8% -18%, hsl(var(--primary) / 0.05), transparent 56%),
+    radial-gradient(900px 560px at 108% 8%, hsl(48 40% 92% / 0.55), transparent 50%),
+    linear-gradient(160deg, hsl(48 30% 97%), hsl(42 22% 95%));
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: 24 7% 8%;
-  --foreground: 38 14% 92%;
-  --card: 24 6% 11%;
-  --card-foreground: 38 14% 92%;
-  --popover: 24 6% 14%;
-  --popover-foreground: 38 14% 92%;
-  --secondary: 24 6% 15%;
-  --secondary-foreground: 38 12% 88%;
-  --muted: 24 6% 15%;
-  --muted-foreground: 32 6% 62%;
-  --accent: 24 6% 18%;
-  --accent-foreground: 38 12% 90%;
-  --accent-surface: 24 6% 18%;
-  --accent-surface-foreground: 38 12% 90%;
+  --background: 28 9% 9%;
+  --foreground: 45 24% 93%;
+  --card: 28 7% 12.5%;
+  --card-foreground: 45 24% 93%;
+  --popover: 28 6% 18%;
+  --popover-foreground: 45 24% 93%;
+  --secondary: 30 7% 15%;
+  --secondary-foreground: 45 22% 90%;
+  --muted: 30 7% 15%;
+  --muted-foreground: 37 7% 63%;
+  --accent: 28 6% 18%;
+  --accent-foreground: 45 22% 90%;
+  --accent-surface: 28 6% 18%;
+  --accent-surface-foreground: 45 22% 90%;
 
-  --primary: 14 67% 58%;
+  --primary: 15 54% 51%;
   --primary-foreground: 0 0% 100%;
-  --ring: 14 67% 58%;
-  --destructive: 4 70% 61%;
-  --success: 145 44% 52%;
-  --warning: 38 78% 59%;
-  --warning-foreground: 38 78% 65%;
-  --source: 190 62% 55%;
-  --ultra: 258 78% 73%;
-  --ultra-from: 252 90% 73%;
-  --ultra-to: 273 78% 70%;
+  --ring: 15 54% 51%;
+  --destructive: 11 51% 56%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-ink: 11 51% 56%;
+  --success: 140 33% 53%;
+  --success-foreground: 28 9% 9%;
+  --success-ink: 140 33% 53%;
+  --warning: 40 60% 58%;
+  --warning-foreground: 40 60% 58%;
+  --source: 187 58% 49%;
+  --ultra: 258 92% 74%;
+  --ultra-from: 252 100% 76%;
+  --ultra-to: 271 93% 73%;
 
-  --border: 30 5% 20%;
-  --input: 30 5% 25%;
-  --input-border: 30 5% 25%;
-  --hairline: 40 12% 94% / 0.075;
-  --hairline-strong: 40 12% 94% / 0.14;
+  --border: 30 6% 21%;
+  --input: 30 6% 24%;
+  --input-border: 30 6% 24%;
+  --hairline: 45 24% 93% / 0.08;
+  --hairline-strong: 45 24% 93% / 0.14;
   --hover-fill: 0 0% 100% / 0.055;
   --press-fill: 0 0% 100% / 0.095;
-  --sheen: 40 12% 96% / 0.055;
+  --sheen: 45 40% 96% / 0.06;
 
-  --sidebar: 24 8% 7%;
-  --sidebar-foreground: 34 7% 69%;
-  --sidebar-border: 24 6% 15%;
-  --sidebar-accent: 24 6% 16%;
-  --titlebar: 24 8% 7%;
+  --sidebar: 28 10% 7.5%;
+  --sidebar-foreground: 37 7% 70%;
+  --sidebar-border: 28 7% 16%;
+  --sidebar-accent: 30 8% 14%;
+  --titlebar: 28 10% 7.5%;
   --caption-hover: 0 0% 100% / 0.065;
   --caption-press: 0 0% 100% / 0.11;
 
-  --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.3);
-  --shadow-float: 0 1px 2px hsl(0 0% 0% / 0.4), 0 14px 38px hsl(0 0% 0% / 0.46), inset 0 1px 0 hsl(40 12% 94% / 0.055);
-  --shadow-glass: 0 18px 44px hsl(0 0% 0% / 0.55), inset 0 1px 0 hsl(40 12% 94% / 0.06);
-  --shadow-pop: 0 1px 2px hsl(0 0% 0% / 0.35), 0 8px 22px hsl(0 0% 0% / 0.4);
-  --glow-primary: 0 1px 2px hsl(var(--primary) / 0.38), 0 8px 22px hsl(var(--primary) / 0.2);
+  --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.3), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
+  --shadow-float:
+    0 4px 16px -4px hsl(0 0% 0% / 0.45),
+    0 16px 40px -12px hsl(0 0% 0% / 0.5),
+    inset 0 1px 0 hsl(45 24% 93% / 0.06);
+  --shadow-glass:
+    0 8px 32px -10px hsl(0 0% 0% / 0.55),
+    inset 0 1px 0 hsl(45 24% 93% / 0.07);
+  --shadow-pop:
+    0 1px 2px hsl(0 0% 0% / 0.4),
+    0 3px 8px -2px hsl(0 0% 0% / 0.5),
+    0 10px 22px -10px hsl(0 0% 0% / 0.5);
+  --glow-primary:
+    0 1px 3px hsl(var(--primary) / 0.4),
+    0 6px 18px -6px hsl(var(--primary) / 0.5),
+    0 18px 36px -16px hsl(var(--primary) / 0.42);
   --well-inset: inset 0 1px 2px hsl(0 0% 0% / 0.38);
 
   --titlebar-fill: hsl(var(--titlebar) / 0.88);
   --sidebar-fill: hsl(var(--sidebar) / 0.9);
   --flyout-fill: hsl(var(--popover) / 0.9);
   --material-wash:
-    radial-gradient(900px 620px at -10% -20%, hsl(var(--primary) / 0.09), transparent 52%),
-    linear-gradient(135deg, hsl(24 8% 9%), hsl(24 6% 7%));
+    radial-gradient(1000px 680px at -10% -18%, hsl(var(--primary) / 0.08), transparent 54%),
+    radial-gradient(800px 520px at 110% 0%, hsl(28 12% 16% / 0.55), transparent 48%),
+    linear-gradient(160deg, hsl(28 9% 10%), hsl(28 8% 8%));
 }
 
 :root.no-transparency {
@@ -184,16 +226,17 @@
   }
 }
 
-:root[data-accent="coral"]  { --primary: 14 62% 49%; --ring: 14 62% 49%; --primary-foreground: 0 0% 100%; }
-.dark[data-accent="coral"]  { --primary: 14 67% 58%; --ring: 14 67% 58%; }
-:root[data-accent="teal"]   { --primary: 181 58% 34%; --ring: 181 58% 34%; --primary-foreground: 0 0% 100%; }
-.dark[data-accent="teal"]   { --primary: 184 56% 53%; --ring: 184 56% 53%; --primary-foreground: 24 8% 8%; }
-:root[data-accent="violet"] { --primary: 252 56% 58%; --ring: 252 56% 58%; --primary-foreground: 0 0% 100%; }
-.dark[data-accent="violet"] { --primary: 253 73% 72%; --ring: 253 73% 72%; --primary-foreground: 24 8% 8%; }
-:root[data-accent="amber"]  { --primary: 36 77% 46%; --ring: 36 77% 46%; --primary-foreground: 30 40% 12%; }
-.dark[data-accent="amber"]  { --primary: 38 78% 61%; --ring: 38 78% 61%; --primary-foreground: 24 8% 8%; }
-:root[data-accent="sage"]   { --primary: 136 31% 43%; --ring: 136 31% 43%; --primary-foreground: 0 0% 100%; }
-.dark[data-accent="sage"]   { --primary: 136 32% 61%; --ring: 136 32% 61%; --primary-foreground: 24 8% 8%; }
+/* Accent swaps — match website [data-accent] values */
+:root[data-accent="coral"]  { --primary: 15 54% 51%; --ring: 15 54% 51%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="coral"]  { --primary: 15 54% 51%; --ring: 15 54% 51%; --primary-foreground: 0 0% 100%; }
+:root[data-accent="teal"]   { --primary: 180 63% 33%; --ring: 180 63% 33%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="teal"]   { --primary: 187 58% 49%; --ring: 187 58% 49%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="violet"] { --primary: 249 59% 64%; --ring: 249 59% 64%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="violet"] { --primary: 249 66% 71%; --ring: 249 66% 71%; --primary-foreground: 40 6% 10%; }
+:root[data-accent="amber"]  { --primary: 39 67% 55%; --ring: 39 67% 55%; --primary-foreground: 30 40% 12%; }
+.dark[data-accent="amber"]  { --primary: 38 73% 63%; --ring: 38 73% 63%; --primary-foreground: 30 40% 10%; }
+:root[data-accent="sage"]   { --primary: 120 18% 52%; --ring: 120 18% 52%; --primary-foreground: 0 0% 100%; }
+.dark[data-accent="sage"]   { --primary: 120 23% 61%; --ring: 120 23% 61%; --primary-foreground: 40 6% 10%; }
 
 @media (forced-colors: active) {
   :root,

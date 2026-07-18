@@ -821,7 +821,7 @@ export function Composer({
           {!privateMode ? (
             <button
               type="button"
-              className="chat-control-toggle"
+              className="chat-control-toggle chat-mic-btn"
               aria-label="Start voice conversation"
               title={
                 voicePhase !== "idle"
@@ -831,7 +831,7 @@ export function Composer({
               disabled={busy || voicePhase !== "idle"}
               onClick={() => void startVoice(conversationId)}
             >
-              <Mic size={15} aria-hidden />
+              <Mic size={15} aria-hidden className="chat-mic-icon" />
             </button>
           ) : null}
 
@@ -843,7 +843,7 @@ export function Composer({
               disabled={status === "stopping"}
               onClick={() => void stopGeneration(threadKey)}
             >
-              <Square size={13} fill="currentColor" aria-hidden />
+              <Square size={13} fill="currentColor" aria-hidden className="chat-stop-icon" />
             </button>
           ) : (
             <button
@@ -853,7 +853,7 @@ export function Composer({
               disabled={!canSend}
               onClick={() => void send(draft)}
             >
-              <ArrowUp size={16} aria-hidden />
+              <ArrowUp size={16} aria-hidden className="chat-send-icon" />
             </button>
           )}
         </div>
